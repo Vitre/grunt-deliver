@@ -13,13 +13,22 @@ module.exports = function(grunt) {
     grunt.registerMultiTask('deliver', 'Continuous delivery', function() {
         var done = this.async();
 
+        // default options
         var options = this.options({
-            driver: 'def'
+            driver: false,
+            upload: {
+                connections: 4,
+                parallel: 2
+            },
+            download: {
+                connections: 4,
+                parallel: 2
+            }
         });
 
         console.log('options', options);
 
-    
+
     });
 
 };
