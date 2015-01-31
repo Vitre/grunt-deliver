@@ -10,6 +10,7 @@
 module.exports = function(grunt) {
 
     grunt.initConfig({
+        pkg: grunt.file.readJSON('package.json'),
 
         jshint: {
 
@@ -33,15 +34,34 @@ module.exports = function(grunt) {
 
         deliver: {
             options: {
-                driver: 'lftp'
+                driver: 'lftp',
+                patterns: ['git', 'github', 'sass', 'dev-node', 'laravel'],
+                auth: 'main',
+                upload: {
+                    connections: 10,
+                    parallel: 2
+                },
+                download: {
+                    connections: 20,
+                    parallel: 5
+                },
+                notify: ['slack', 'hipchat'],
+                cache: {
+                    dirs: ['tmp', 'app/storage/cache', 'app/storage/views', 'app/storage/twig']
+                }
             },
 
             stage: {
-
+                name: 'Stage',
+                branch: 'develop',
+                target: '/beta'
             },
 
             production: {
-
+                name: 'Production',
+                branch: 'master',
+                target: '/www',
+                backup: true
             }
         }
 
@@ -58,5 +78,9 @@ module.exports = function(grunt) {
     //---
 
     grunt.registerTask('watch_dev', ['watch']);
+
+    grunt.registerTask('stage_deliver', ['build', 'deliver:stage']);
+
+    grunt.registerTask('production_deliver', ['build', 'deliver:production']);
 
 };
