@@ -9,23 +9,54 @@
 
 module.exports = function(grunt) {
 
-  grunt.initConfig({
+    grunt.initConfig({
 
-    jshint: {
+        jshint: {
 
-      all: [
-        'Gruntfile.js',
-        'tasks/**/*.js'
-      ],
+            all: [
+                'Gruntfile.js',
+                'tasks/**/*.js'
+            ],
 
-      options: {
-        jshintrc: '.jshintrc'
-      }
+            options: {
+                jshintrc: '.jshintrc'
+            }
 
-    },
+        },
 
-  });
+        watch: {
+            js: {
+                files: ['**/*.js'],
+                tasks: ['jshint:all']
+            }
+        },
 
-}
+        deliver: {
+            options: {
+                driver: 'lftp'
+            },
 
-grunt.loadTasks('tasks');
+            stage: {
+
+            },
+
+            production: {
+
+            }
+        }
+
+    });
+
+
+    grunt.loadTasks('tasks');
+
+    //---
+
+    grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-contrib-watch');
+
+    //---
+
+    grunt.registerTask('watch_dev', ['watch']);
+
+};

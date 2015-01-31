@@ -1,2 +1,2 @@
 # grunt-deliver
-Grunt continuous delvery task
+Grunt continuous delivery task

@@ -1,0 +1,7 @@
+.deliver*
+.git*
+.Gruntfile.js
+.jshint
+LICENCE
+package.json
+README.md

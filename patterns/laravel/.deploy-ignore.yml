@@ -1,0 +1,7 @@
+
+app/storage/cache/
+app/storage/views/
+app/storage/sessions/
+tmp/
+env.php
+env.*.php
