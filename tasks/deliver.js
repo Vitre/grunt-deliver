@@ -9,6 +9,7 @@
 var array = require('array-extended');
 var path = require('path');
 var fs = require('fs');
+var sync = require('sync');
 
 module.exports = function(grunt) {
 
@@ -46,11 +47,11 @@ module.exports = function(grunt) {
 
         if (grunt.file.exists(file)) {
 
-            grunt.verbose.writeln('pattern:'.yellow, name, file);
-
             pattern.deploy_ignore = fs.readFileSync(file).toString().replace(/\r/g, '').split('\n').filter(function(value) {
-                return value !== '' &&  value !== ' ';
+                return value !== '' && value !== ' ';
             });
+
+            grunt.verbose.ok('Pattern ' + name.yellow + ' loaded.', file.grey);
 
         }
 
@@ -103,7 +104,27 @@ module.exports = function(grunt) {
         grunt.verbose.writeln('options: '.yellow, JSON.stringify(options, null, 2));
         grunt.verbose.writeln('pattern: '.yellow, JSON.stringify(pattern, null, 2));
 
-        done();
+        // Driver init
+        var driver;
+        var driverPath = path.normalize(__dirname + '/../drivers/' + options.driver + '.js');
+        if (grunt.file.exists(driverPath)) {
+
+            driver = require(driverPath)(grunt);
+
+            grunt.verbose.oklns('Driver "' + options.driver + '" loaded.');
+        } else {
+            grunt.fail.fatal('Driver "' + options.driver + '" not defined.');
+        }
+
+        sync(function() {
+            driver.testBin.sync();
+        });
+
+        sync(function() {
+            driver.deploy.sync();
+        });
+
+        // done();
     });
 
 };
