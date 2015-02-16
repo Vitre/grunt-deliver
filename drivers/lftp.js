@@ -4,12 +4,16 @@
  * Copyright (c) 2015 "Vitre" Vít Mádr, contributors
  * Licensed under the MIT license.
  */
-
 'use strict';
 
+var async = require('async');
 var cp = require('child_process');
 
 module.exports = function(grunt) {
+
+    function lftpBool(value) {
+        return value ? 'on' : 'off';
+    }
 
     return {
 
@@ -30,24 +34,9 @@ module.exports = function(grunt) {
 
         },
 
-        deploy: function(callback) {
+        deploy: function(options, callback) {
 
-            /*
-            'lftp -c "open -u ' + options.user + ',' + options.password + ' ' + options.host + ';' +
-                'set ssl:verify-certificate no;' +
-                'set ftp:passive-mode on;' +
-                'set cmd:trace on;' +
-                'set cache:enable off;' +
-                'set ftp:sync-mode off;' +
-                'set net:connection-limit ' + options.connection_limit + ';' +
-                'set mirror:parallel-transfer-count ' + options.parallel_count + ';' +
-                'lcd ' + options.workspace + ';' +
-                'cd ' + options.target + ';' +
-                'mirror -R --no-symlinks --no-perms --allow-suid --no-umask --dereference -X ' + ci.ignore.join(' -X ') + ';' +
-                'bye"'
-                */
-
-            var lftp = cp.spawn('lftp', []);
+            var lftp = cp.spawn('lftp');
 
             lftp.stderr.on('data', function(data) {
                 console.log('stderr:', data.toString());
@@ -57,12 +46,81 @@ module.exports = function(grunt) {
                 console.log('stdout:', data.toString());
             });
 
-            lftp.stdin.write('open -u test,test test\n');
+            // login
+            var tasks = [
+                'open -u {user},{password} {host};'.replace('{user}', options.user).replace('{password}', options.password).replace('{host}', options.host)
+            ];
 
+            // SSL certificates
+            if (typeof options.ssl_verify_certificate !== 'undefined') {
+                tasks.push('set ssl:verify-certificate ' + lftpBool(options.ssl_verify_certificate) + ';');
+            }
 
-            lftp.stdin.write('bye\n');
-console.log('tesrt');
-            proc.stdin.end();
+            // Passive mode
+            if (typeof options.passive_mode !== 'undefined') {
+                tasks.push('set ftp:passive-mode ' + lftpBool(options.passive_mode) + ';');
+            }
+
+            // Tracing
+            if (typeof options.trace !== 'undefined') {
+                tasks.push('set cmd:trace ' + lftpBool(options.trace) + ';');
+            }
+
+            // Cache
+            if (typeof options.cache !== 'undefined') {
+                tasks.push('set cache:enable ' + lftpBool(options.cache) + ';');
+            }
+
+            // Sync mode
+            if (typeof options.sync_mode !== 'undefined') {
+                tasks.push('set ftp:sync-mode ' + lftpBool(options.sync_mode) + ';');
+            }
+
+            // Connection limit
+            if (typeof options.connection_limit !== 'undefined') {
+                tasks.push('set net:connection-limit ' + options.connection_limit + ';');
+            }
+
+            // Parallel transfer count
+            if (typeof options.parallel_count !== 'undefined') {
+                tasks.push('set mirror:parallel-transfer-count ' + options.parallel_count + ';');
+            }
+
+            // Source
+            if (options.src !== false) {
+                tasks.push('lcd ' + options.src + ';');
+            }
+
+            // Target
+            if (options.target !== false) {
+                tasks.push('cd ' + options.target + ';');
+            }
+
+            // Mirror task
+            var mirror = 'mirror -R --no-symlinks --no-perms --allow-suid --no-umask --dereference';
+            if (options.ignore.length) {
+                mirror += ' -X ' + options.ignore.join(' -X ');
+            }
+            mirror += ';';
+            tasks.push(mirror);
+
+            // Bye
+            tasks.push('bye;');
+
+            // Tasks exec
+            async.eachSeries(tasks, function(item, callback) {
+
+                grunt.verbose.ok(item);
+
+                lftp.stdin.write(item + '\n', callback);
+
+            }, function(err) {
+
+                lftp.stdin.end();
+
+                callback(err);
+
+            });
 
         }
 

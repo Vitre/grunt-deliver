@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "array-extended": "0.0.11",
-    "colors": "^1.0.3",
-    "sync": "^0.2.5"
+    "async": "^0.9.0",
+    "colors": "^1.0.3"
   }
 }

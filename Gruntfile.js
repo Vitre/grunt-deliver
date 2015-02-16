@@ -16,7 +16,8 @@ module.exports = function(grunt) {
 
             all: [
                 'Gruntfile.js',
-                'tasks/**/*.js'
+                'tasks/**/*.js',
+                'drivers/**/*.js'
             ],
 
             options: {
@@ -27,7 +28,7 @@ module.exports = function(grunt) {
 
         watch: {
             js: {
-                files: ['**/*.js'],
+                files: ['Gruntfile.js', 'tasks/**/*.js', 'drivers/**/*.js'],
                 tasks: ['jshint:all']
             }
         },
@@ -40,6 +41,12 @@ module.exports = function(grunt) {
                 patterns: ['git', 'github', 'sass', 'dev-node', 'laravel'],
 
                 auth: 'main',
+
+                src: 'dist',
+
+                target: '/beta',
+
+                backup: false,
 
                 upload: {
                     connections: 10,
@@ -67,12 +74,15 @@ module.exports = function(grunt) {
             stage: {
                 name: 'Stage',
                 branch: 'develop',
+                auth: 'stage',
+                src: 'dist',
                 target: '/beta'
             },
 
             production: {
                 name: 'Production',
                 branch: 'master',
+                src: 'dist',
                 target: '/www',
                 backup: true
             }
