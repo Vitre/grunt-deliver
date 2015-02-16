@@ -1,7 +1,7 @@
 .deliver*
 .git*
-.Gruntfile.js
-.jshint
+.jshint*
+Gruntfile.js
 LICENCE
 package.json
 README.md
