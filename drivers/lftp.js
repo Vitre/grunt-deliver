@@ -36,14 +36,23 @@ module.exports = function(grunt) {
 
         deploy: function(options, callback) {
 
-            var lftp = cp.spawn('lftp');
+            var lftp = cp.spawn('lftp', []);
+            grunt.verbose.ok('lftp');
 
             lftp.stderr.on('data', function(data) {
-                console.log('stderr:', data.toString());
+                grunt.fail.fatal(data.toString());
             });
 
             lftp.stdout.on('data', function(data) {
-                console.log('stdout:', data.toString());
+                grunt.verbose.ok('stdout:', data.toString());
+            });
+
+            lftp.on('close', function(code) {
+                grunt.verbose.ok('close:', code);
+            });
+
+            lftp.on('exit', function(code) {
+                grunt.verbose.ok('exit:', code);
             });
 
             // login
@@ -62,8 +71,9 @@ module.exports = function(grunt) {
             }
 
             // Tracing
-            if (typeof options.trace !== 'undefined') {
-                tasks.push('set cmd:trace ' + lftpBool(options.trace) + ';');
+            var trace = grunt.option('verbose') || (typeof options.trace !== 'undefined' && options.trace);
+            if (trace) {
+                tasks.push('set cmd:trace ' + lftpBool(trace) + ';');
             }
 
             // Cache
@@ -98,10 +108,17 @@ module.exports = function(grunt) {
 
             // Mirror task
             var mirror = 'mirror -R --no-symlinks --no-perms --allow-suid --no-umask --dereference';
+
             if (options.ignore.length) {
                 mirror += ' -X ' + options.ignore.join(' -X ');
             }
+
+            if (grunt.option('no-write')) {
+                mirror += ' --dry-run';
+            }
+
             mirror += ';';
+
             tasks.push(mirror);
 
             // Bye

@@ -75,8 +75,8 @@ module.exports = function(grunt) {
                 name: 'Stage',
                 branch: 'develop',
                 auth: 'stage',
-                src: 'dist',
-                target: '/beta'
+                src: 'data',
+                target: '/deliver'
             },
 
             production: {

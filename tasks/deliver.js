@@ -132,6 +132,7 @@ module.exports = function(grunt) {
     //---
 
     grunt.registerMultiTask('deliver', 'Continuous delivery', function() {
+        var task = this;
         var done = this.async();
 
         // Options
@@ -200,16 +201,16 @@ module.exports = function(grunt) {
 
                     ignore: deployIgnore,
 
-                    src: this.data.src,
+                    src: task.data.src,
 
-                    target: this.data.target
+                    target: task.data.target
 
                 }, callback);
 
             }
         ], function(err) {
 
-            done();
+            // done();
 
         });
 
