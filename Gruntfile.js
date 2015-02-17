@@ -9,6 +9,8 @@
 
 module.exports = function(grunt) {
 
+    require('time-grunt')(grunt);
+
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
 
@@ -75,7 +77,7 @@ module.exports = function(grunt) {
                 name: 'Stage',
                 branch: 'develop',
                 auth: 'stage',
-                src: 'data',
+                src: 'test',
                 target: '/deliver'
             },
 

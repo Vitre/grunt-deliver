@@ -10,6 +10,9 @@ var array = require('array-extended');
 var path = require('path');
 var fs = require('fs');
 var async = require('async');
+var extend = require('extend');
+
+//---
 
 module.exports = function(grunt) {
 
@@ -61,7 +64,7 @@ module.exports = function(grunt) {
         };
 
         var dir = path.normalize(__dirname + '/../patterns/' + name + '/');
-        var file = dir + '.deploy-ignore.yml';
+        var file = dir + '.deploy-ignore';
 
         if (grunt.file.exists(file)) {
 
@@ -129,6 +132,14 @@ module.exports = function(grunt) {
         }
     }
 
+    function getSourcePath(sourcePath) {
+        if (!path.isAbsolute(sourcePath)) {
+            return path.join(process.cwd(), sourcePath);
+        }
+
+        return sourcePath;
+    }
+
     //---
 
     grunt.registerMultiTask('deliver', 'Continuous delivery', function() {
@@ -139,8 +150,12 @@ module.exports = function(grunt) {
         var options = getOptions(this);
         grunt.verbose.writeln('options: '.yellow, JSON.stringify(options, null, 2));
 
+        // Target options
+        var targetOptions = extend({}, options, task.data);
+        grunt.verbose.writeln('target_options: '.yellow, JSON.stringify(targetOptions, null, 2));
+
         // Pattern
-        var pattern = getMultiPattern(options.patterns);
+        var pattern = getMultiPattern(targetOptions.patterns);
         grunt.verbose.writeln('pattern: '.yellow, JSON.stringify(pattern, null, 2));
 
         // Deploy ignore
@@ -163,20 +178,21 @@ module.exports = function(grunt) {
         }
 
         // Driver init
-        var driver = initDriver(options.driver);
+        var driver = initDriver(targetOptions.driver);
 
         // Async series
         async.series([
 
+            // Test
             function(callback) {
 
-                // Bin test
-                driver.testBin(callback);
+                driver.test(callback);
 
             },
+
+            // Deploy
             function(callback) {
 
-                // Deploy
                 driver.deploy({
 
                     host: host,
@@ -185,32 +201,41 @@ module.exports = function(grunt) {
 
                     password: password,
 
-                    ssl_verify_certificate: options.ssl_verify_certificate,
+                    ssl_verify_certificate: targetOptions.ssl_verify_certificate,
 
-                    passive_mode: options.passive_mode,
+                    passive_mode: targetOptions.passive_mode,
 
-                    trace: options.trace,
+                    trace: targetOptions.trace,
 
-                    cache: options.cache,
+                    cache: targetOptions.cache,
 
-                    sync_mode: options.sync_mode,
+                    sync_mode: targetOptions.sync_mode,
 
-                    connection_limit: options.connection_limit,
+                    connection_limit: targetOptions.connection_limit,
 
-                    parallel_count: options.parallel_count,
+                    parallel_count: targetOptions.parallel_count,
 
                     ignore: deployIgnore,
 
-                    src: task.data.src,
+                    src: getSourcePath(targetOptions.src),
 
-                    target: task.data.target
+                    target: targetOptions.target
 
                 }, callback);
 
             }
-        ], function(err) {
+        ], function(error) {
 
-            // done();
+            if (error) {
+
+                grunt.fail.fatal(error);
+
+            } else {
+
+                grunt.log.ok('Deliver ' + task.target.yellow + ' finished');
+
+                done();
+            }
 
         });
 
