@@ -11,11 +11,21 @@ var path = require('path');
 var fs = require('fs');
 var async = require('async');
 var extend = require('extend');
-var linger = require('linger')
+var linger = require('linger');
+var util = require('util');
 
 //---
 
 module.exports = function (grunt) {
+
+    var default_deliver_ingore = [
+        '.grunt',
+        '.backup',
+        '.deliver-ignore',
+        '.deliver-secret.yml'
+    ];
+
+    //---
 
     function getOptions(task) {
         return task.options({
@@ -103,11 +113,13 @@ module.exports = function (grunt) {
     }
 
     function getIgnore(pattern) {
-        var deployIgnore = pattern.deploy_ignore;
+        var deployIgnore = array.union(default_deliver_ingore, pattern.deploy_ignore);
+
         var deployIgnoreFile = process.cwd() + '/.deliver-ignore';
         if (grunt.file.exists(deployIgnoreFile)) {
             deployIgnore = array.union(deployIgnore, readIgnoreFile(deployIgnoreFile));
         }
+
         return deployIgnore;
     }
 
@@ -224,8 +236,8 @@ module.exports = function (grunt) {
         if (targetOptions.backup || grunt.option('backup')) {
             tasks.push(function (callback) {
 
+                var time = process.hrtime();
                 grunt.log.subhead('Backup started.'.blue);
-                console.time('backup');
                 if (!grunt.option('verbose') && !grunt.option('debug')) {
                     linger('Downloading...');
                 }
@@ -237,11 +249,16 @@ module.exports = function (grunt) {
 
                 }), function (error) {
 
+                    time = process.hrtime(time);
+                    var timef = Math.round((time[0] + time[1] / 1000000000) * 10) / 10;
                     if (!grunt.option('verbose') && !grunt.option('debug')) {
                         linger();
                     }
-                    grunt.log.ok('Backup finished.'.green);
-                    console.timeEnd('backup');
+                    if (error !== null) {
+                        grunt.log.error('Backup failed.'.red + util.format(' (%ds)', timef).magenta);
+                    } else {
+                        grunt.log.ok('Backup finished.'.green + util.format(' (%ds)', timef).magenta);
+                    }
 
                     callback(error);
 
@@ -253,8 +270,8 @@ module.exports = function (grunt) {
         // Deploy
         tasks.push(function (callback) {
 
+            var time = process.hrtime();
             grunt.log.subhead('Deploy started.'.blue);
-            console.time('deploy');
             if (!grunt.option('verbose') && !grunt.option('debug')) {
                 linger('Uploading...');
             }
@@ -266,11 +283,16 @@ module.exports = function (grunt) {
 
             }), function (error) {
 
+                time = process.hrtime(time);
+                var timef = Math.round((time[0] + time[1] / 1000000000) * 10) / 10;
                 if (!grunt.option('verbose') && !grunt.option('debug')) {
                     linger();
                 }
-                grunt.log.ok('Deploy finished.'.green);
-                console.timeEnd('deploy');
+                if (error !== null) {
+                    grunt.log.error('Deploy failed.'.red + util.format(' (%ds)', timef).magenta);
+                } else {
+                    grunt.log.ok('Deploy finished.'.green + util.format(' (%ds)', timef).magenta);
+                }
 
                 callback(error);
 
@@ -278,15 +300,21 @@ module.exports = function (grunt) {
 
         });
 
+        var time = process.hrtime();
+
         async.series(tasks, function (error) {
+
+            time = process.hrtime(time);
+            var timef = Math.round((time[0] + time[1] / 1000000000) * 10) / 10;
 
             if (error) {
 
-                grunt.fail.fatal(error);
+                grunt.log.error(error);
+                grunt.fail.fatal('Deliver failed.' + util.format(' (%ds)', timef).magenta);
 
             } else {
 
-                grunt.log.ok('Deliver ' + task.target.yellow + ' finished');
+                grunt.log.ok('Deliver ' + task.target.yellow + ' finished.' + util.format(' (%ds)', timef).magenta);
 
                 done();
             }
