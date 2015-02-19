@@ -27,6 +27,9 @@ node_modules
 # Users Environment Variables
 .lock-wscript
 
+# IDE
+.idea
+
 # Grunt Deliver
 .deliver-secret.yml
 .backup

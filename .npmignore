@@ -1,0 +1,6 @@
+.grunt
+.idea
+.deliver-secret.yml
+.backup
+data
+test
