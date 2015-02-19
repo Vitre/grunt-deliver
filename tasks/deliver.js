@@ -221,7 +221,9 @@ module.exports = function (grunt) {
             // Test
             function (callback) {
 
-                driver.test(callback);
+                driver.test(function(error) {
+                    callback(typeof error !== 'undefined' ? new Error('Driver ' + targetOptions.driver.yellow + ' test failed.') : null);
+                });
 
             }
 
@@ -257,13 +259,14 @@ module.exports = function (grunt) {
                     target: getBackupPath(targetOptions)
 
                 }), function (error) {
+console.log(error);
 
                     time = process.hrtime(time);
                     var timef = Math.round((time[0] + time[1] / 1000000000) * 10) / 10;
                     if (!grunt.option('verbose') && !grunt.option('debug')) {
                         linger();
                     }
-                    if (error !== null) {
+                    if (typeof error === 'object') {
                         grunt.log.error(error.message);
                         grunt.log.error('Backup failed.'.red + util.format(' (%ds)', timef).magenta);
                     } else {
@@ -292,13 +295,14 @@ module.exports = function (grunt) {
                 target: targetOptions.target
 
             }), function (error) {
+                console.log(error);
 
                 time = process.hrtime(time);
                 var timef = Math.round((time[0] + time[1] / 1000000000) * 10) / 10;
                 if (!grunt.option('verbose') && !grunt.option('debug')) {
                     linger();
                 }
-                if (error !== null) {
+                if (typeof error === 'object') {
                     grunt.log.error(error.message);
                     grunt.log.error('Deploy failed.'.red + util.format(' (%ds)', timef).magenta);
                 } else {
@@ -317,7 +321,7 @@ module.exports = function (grunt) {
             time = process.hrtime(time);
             var timef = Math.round((time[0] + time[1] / 1000000000) * 10) / 10;
 
-            if (typeof error !== 'undefined') {
+            if (typeof error === 'object') {
 
                 grunt.log.error(error.message);
                 grunt.fail.fatal('Deliver failed.' + util.format(' (%ds)', timef).magenta);

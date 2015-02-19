@@ -130,7 +130,8 @@ module.exports = function (grunt) {
 
                 } else {
 
-                    callback(new Error('LFTP test failed.'));
+                    grunt.verbose.error(error);
+                    callback(new Error(error));
 
                 }
 
