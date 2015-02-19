@@ -126,13 +126,13 @@ module.exports = function (grunt) {
                     var match = stdout.match(/LFTP \| Version (\d.\d.\d)/);
                     grunt.verbose.ok('LFTP bin version:', match[1]);
 
+                    callback();
+
                 } else {
 
-                    grunt.log.error('LFTP test failed');
+                    callback(new Error('LFTP test failed.'));
 
                 }
-
-                callback(error);
 
             });
 
@@ -189,7 +189,7 @@ module.exports = function (grunt) {
                 commandError = data.toString();
                 grunt.verbose.errorlns(commandError);
 
-                lastSeriesCallback(commandError);
+                lastSeriesCallback(new Error(commandError));
             });
 
             // Commands exec
@@ -205,14 +205,15 @@ module.exports = function (grunt) {
 
                 if (commandError) {
 
-                    seriesCallback(commandError);
+                    seriesCallback(new Error(commandError));
 
                 } else {
 
                     lftp.stdin.write(command, function (error) {
                         setTimeout(function () {
-                            seriesCallback(error);
+                            seriesCallback(typeof error !== 'undefined' ? new Error(error) : null);
                         }, command_response_timeout);
+
                     });
 
                 }
@@ -274,7 +275,7 @@ module.exports = function (grunt) {
                 commandError = data.toString();
                 grunt.verbose.errorlns(commandError);
 
-                lastSeriesCallback(commandError);
+                lastSeriesCallback(new Error(commandError));
             });
 
             // commands exec
@@ -290,13 +291,13 @@ module.exports = function (grunt) {
 
                 if (commandError) {
 
-                    seriesCallback(commandError);
+                    seriesCallback(new Error(commandError));
 
                 } else {
 
                     lftp.stdin.write(command, function (error) {
                         setTimeout(function () {
-                            seriesCallback(error);
+                            seriesCallback(error ? new Error(error) : null);
                         }, command_response_timeout);
                     });
 

@@ -166,9 +166,15 @@ module.exports = function (grunt) {
         return dir;
     }
 
+    function getProcessEnvVar(name) {
+        return typeof process.env[name] !== 'undefined' ? process.env[name] : null;
+    }
+
     //---
 
     grunt.registerMultiTask('deliver', 'Continuous delivery', function () {
+
+        var time = process.hrtime();
         var task = this;
         var done = this.async();
 
@@ -193,11 +199,14 @@ module.exports = function (grunt) {
         if (typeof secret[this.target] !== 'undefined') {
 
             var host, user, password;
-            var targetSecret = secret[this.target];
+            var targetSecret = secret[task.target];
+            var targetu = task.target.toUpperCase();
 
-            host = targetSecret.host;
-            user = targetSecret.user;
-            password = targetSecret.password;
+            host = grunt.option('host') || getProcessEnvVar('DELIVER_' + targetu + '_HOST') || targetSecret.host;
+            user = grunt.option('user') || getProcessEnvVar('DELIVER_' + targetu + '_USER') || targetSecret.user;
+            password = grunt.option('password') || getProcessEnvVar('DELIVER_' + targetu + '_PASSWORD') || targetSecret.password;
+
+            grunt.verbose.ok('Auth', host, user, password);
 
         } else {
             grunt.fail.fatal('Secret target "' + this.target + '" not defined.');
@@ -214,7 +223,7 @@ module.exports = function (grunt) {
 
                 driver.test(callback);
 
-            },
+            }
 
         ];
 
@@ -255,6 +264,7 @@ module.exports = function (grunt) {
                         linger();
                     }
                     if (error !== null) {
+                        grunt.log.error(error.message);
                         grunt.log.error('Backup failed.'.red + util.format(' (%ds)', timef).magenta);
                     } else {
                         grunt.log.ok('Backup finished.'.green + util.format(' (%ds)', timef).magenta);
@@ -289,6 +299,7 @@ module.exports = function (grunt) {
                     linger();
                 }
                 if (error !== null) {
+                    grunt.log.error(error.message);
                     grunt.log.error('Deploy failed.'.red + util.format(' (%ds)', timef).magenta);
                 } else {
                     grunt.log.ok('Deploy finished.'.green + util.format(' (%ds)', timef).magenta);
@@ -300,16 +311,15 @@ module.exports = function (grunt) {
 
         });
 
-        var time = process.hrtime();
-
+        // Tasks execution
         async.series(tasks, function (error) {
 
             time = process.hrtime(time);
             var timef = Math.round((time[0] + time[1] / 1000000000) * 10) / 10;
 
-            if (error) {
+            if (typeof error !== 'undefined') {
 
-                grunt.log.error(error);
+                grunt.log.error(error.message);
                 grunt.fail.fatal('Deliver failed.' + util.format(' (%ds)', timef).magenta);
 
             } else {
