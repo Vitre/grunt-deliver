@@ -30,3 +30,4 @@ node_modules
 .deliver-secret.yml
 data
 test
+.backup

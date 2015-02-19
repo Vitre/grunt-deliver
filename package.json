@@ -33,7 +33,9 @@
   "dependencies": {
     "array-extended": "0.0.11",
     "async": "^0.9.0",
-    "colors": "^1.0.3",
-    "extend": "^2.0.0"
+    "chalk": "^0.5.1",
+    "extend": "^2.0.0",
+    "linger": "0.0.3",
+    "shelljs": "^0.3.0"
   }
 }

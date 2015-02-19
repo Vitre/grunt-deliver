@@ -6,19 +6,108 @@
  */
 'use strict';
 
+require('shelljs/global');
+
 var async = require('async');
 var cp = require('child_process');
 
 //---
 
-module.exports = function(grunt) {
+module.exports = function (grunt) {
 
-    var cmd_response_timeout = 750;
+    var command_response_timeout = 750;
+
+    var mirror_default_options = [
+        'no-symlinks',
+        'no-perms',
+        'no-umask',
+        'allow-suid',
+        'dereference'
+    ];
 
     //---
 
     function lftpBool(value) {
         return value ? 'on' : 'off';
+    }
+
+    function getLoginCommand(options) {
+        return 'open -u {user},{password} {host}'.replace('{user}', options.user).replace('{password}', options.password).replace('{host}', options.host);
+    }
+
+    function getCommandString(command) {
+        return command + ';' + grunt.util.linefeed;
+    }
+
+    function getInitCommands(options) {
+        var commands = [];
+
+        // SSL certificates
+        if (typeof options.ssl_verify_certificate !== 'undefined') {
+            commands.push('set ssl:verify-certificate ' + lftpBool(options.ssl_verify_certificate));
+        }
+
+        // Passive mode
+        if (typeof options.passive_mode !== 'undefined') {
+            commands.push('set ftp:passive-mode ' + lftpBool(options.passive_mode));
+        }
+
+        // Tracing
+        var trace = grunt.option('verbose') || (typeof options.trace !== 'undefined' && options.trace);
+        if (trace) {
+            commands.push('set cmd:trace ' + lftpBool(trace));
+        }
+
+        // Cache
+        if (typeof options.cache !== 'undefined') {
+            commands.push('set cache:enable ' + lftpBool(options.cache));
+        }
+
+        // Sync mode
+        if (typeof options.sync_mode !== 'undefined') {
+            commands.push('set ftp:sync-mode ' + lftpBool(options.sync_mode));
+        }
+
+        // Connection limit
+        if (typeof options.connection_limit !== 'undefined') {
+            commands.push('set net:connection-limit ' + options.connection_limit);
+        }
+
+        // Parallel transfer count
+        if (typeof options.parallel_count !== 'undefined') {
+            commands.push('set mirror:parallel-transfer-count ' + options.parallel_count);
+        }
+
+        return commands;
+    }
+
+    function getCommandOptionString() {
+        return mirror_default_options.map(function (value) {
+            return '--' + value;
+        }).join(' ');
+    }
+
+    function initProcess() {
+        var lftp = cp.spawn('lftp', []);
+        grunt.verbose.ok('lftp');
+
+        lftp.stdin.setEncoding('utf8');
+
+        if (grunt.option('debug')) {
+            lftp.stdout.on('data', function (data) {
+                grunt.log.debug('stdout:', data.toString());
+            });
+
+            lftp.on('exit', function (code) {
+                grunt.log.debug('exit:', code);
+            });
+
+            lftp.on('close', function (code) {
+                grunt.log.debug('close:', code);
+            });
+        }
+
+        return lftp;
     }
 
     //---
@@ -28,9 +117,9 @@ module.exports = function(grunt) {
         /**
          * Tester
          */
-        test: function(callback) {
+        test: function (callback) {
 
-            cp.exec('lftp --version', function(error, stdout, stderr) {
+            cp.exec('lftp --version', function (error, stdout, stderr) {
 
                 if (error === null) {
 
@@ -50,63 +139,32 @@ module.exports = function(grunt) {
         },
 
         /**
-         * Deploy method
+         * Backup method
          */
-        deploy: function(options, callback) {
+        backup: function (options, callback) {
 
-            // login
-            var tasks = [
-                'open -u {user},{password} {host}'.replace('{user}', options.user).replace('{password}', options.password).replace('{host}', options.host)
+            // Login
+            var commands = [
+                getLoginCommand(options)
             ];
 
-            // SSL certificates
-            if (typeof options.ssl_verify_certificate !== 'undefined') {
-                tasks.push('set ssl:verify-certificate ' + lftpBool(options.ssl_verify_certificate));
-            }
-
-            // Passive mode
-            if (typeof options.passive_mode !== 'undefined') {
-                tasks.push('set ftp:passive-mode ' + lftpBool(options.passive_mode));
-            }
-
-            // Tracing
-            var trace = grunt.option('verbose') || (typeof options.trace !== 'undefined' && options.trace);
-            if (trace) {
-                tasks.push('set cmd:trace ' + lftpBool(trace));
-            }
-
-            // Cache
-            if (typeof options.cache !== 'undefined') {
-                tasks.push('set cache:enable ' + lftpBool(options.cache));
-            }
-
-            // Sync mode
-            if (typeof options.sync_mode !== 'undefined') {
-                tasks.push('set ftp:sync-mode ' + lftpBool(options.sync_mode));
-            }
-
-            // Connection limit
-            if (typeof options.connection_limit !== 'undefined') {
-                tasks.push('set net:connection-limit ' + options.connection_limit);
-            }
-
-            // Parallel transfer count
-            if (typeof options.parallel_count !== 'undefined') {
-                tasks.push('set mirror:parallel-transfer-count ' + options.parallel_count);
-            }
+            commands = commands.concat(getInitCommands(options));
 
             // Source
-            if (options.src !== false) {
-                tasks.push('lcd ' + options.src);
+            if (options.target !== false) {
+
+                mkdir('-p', options.target);
+
+                commands.push('lcd ' + options.target);
             }
 
             // Target
-            if (options.target !== false) {
-                tasks.push('cd ' + options.target);
+            if (options.src !== false) {
+                commands.push('cd ' + options.src);
             }
 
             // Mirror task
-            var mirror = 'mirror -R --no-symlinks --no-perms --allow-suid --no-umask --dereference';
+            var mirror = 'mirror ' + getCommandOptionString();
 
             if (options.ignore.length) {
                 mirror += ' -X ' + options.ignore.join(' -X ');
@@ -116,65 +174,135 @@ module.exports = function(grunt) {
                 mirror += ' --dry-run';
             }
 
-            tasks.push(mirror);
+            commands.push(mirror);
 
             // Bye
-            tasks.push('bye');
+            commands.push('bye');
 
             // Processing
-            var lftp = cp.spawn('lftp', []);
-            grunt.verbose.ok('lftp');
+            var lftp = initProcess();
 
-            lftp.stdin.setEncoding('utf8');
+            var commandError = false;
 
-            var cmdError = false;
+            lftp.stderr.on('data', function (data) {
 
-            lftp.stderr.on('data', function(data) {
+                commandError = data.toString();
+                grunt.verbose.errorlns(commandError);
 
-                cmdError = data.toString();
-                grunt.verbose.errorlns(cmdError);
-
-                lastSeriesCallback(cmdError);
+                lastSeriesCallback(commandError);
             });
 
-            lftp.stdout.on('data', function(data) {
-                grunt.verbose.ok('stdout:', data.toString());
-            });
-
-            lftp.on('exit', function(code) {
-                grunt.verbose.ok('exit:', code);
-            });
-
-            lftp.on('close', function(code) {
-                grunt.verbose.ok('close:', code);
-            });
-
-            // Tasks exec
+            // Commands exec
             var lastSeriesCallback;
 
-            async.eachSeries(tasks, function(item, seriesCallback) {
+            async.eachSeries(commands, function (item, seriesCallback) {
 
                 lastSeriesCallback = seriesCallback;
 
-                var cmd = item + ';\n';
+                var command = getCommandString(item);
 
-                grunt.verbose.ok(cmd);
+                grunt.verbose.ok(command);
 
-                if (cmdError) {
+                if (commandError) {
 
-                    seriesCallback(cmdError);
+                    seriesCallback(commandError);
 
                 } else {
 
-                    lftp.stdin.write(cmd, function(error) {
-                        setTimeout(function() {
+                    lftp.stdin.write(command, function (error) {
+                        setTimeout(function () {
                             seriesCallback(error);
-                        }, cmd_response_timeout);
+                        }, command_response_timeout);
                     });
 
                 }
 
-            }, function(error) {
+            }, function (error) {
+
+                lftp.stdin.end();
+
+                callback(error);
+
+            });
+        },
+
+        /**
+         * Deploy method
+         */
+        deploy: function (options, callback) {
+
+            // Login
+            var commands = [
+                getLoginCommand(options)
+            ];
+
+            commands = commands.concat(getInitCommands(options));
+
+            // Source
+            if (options.src !== false) {
+                commands.push('lcd ' + options.src);
+            }
+
+            // Target
+            if (options.target !== false) {
+                commands.push('cd ' + options.target);
+            }
+
+            // Mirror task
+            var mirror = 'mirror -R ' + getCommandOptionString();
+
+            if (options.ignore.length) {
+                mirror += ' -X ' + options.ignore.join(' -X ');
+            }
+
+            if (grunt.option('no-write')) {
+                mirror += ' --dry-run';
+            }
+
+            commands.push(mirror);
+
+            // Bye
+            commands.push('bye');
+
+            // Processing
+            var lftp = initProcess();
+
+            var commandError = false;
+
+            lftp.stderr.on('data', function (data) {
+
+                commandError = data.toString();
+                grunt.verbose.errorlns(commandError);
+
+                lastSeriesCallback(commandError);
+            });
+
+            // commands exec
+            var lastSeriesCallback;
+
+            async.eachSeries(commands, function (item, seriesCallback) {
+
+                lastSeriesCallback = seriesCallback;
+
+                var command = item + ';\n';
+
+                grunt.verbose.ok(command);
+
+                if (commandError) {
+
+                    seriesCallback(commandError);
+
+                } else {
+
+                    lftp.stdin.write(command, function (error) {
+                        setTimeout(function () {
+                            seriesCallback(error);
+                        }, command_response_timeout);
+                    });
+
+                }
+
+            }, function (error) {
 
                 lftp.stdin.end();
 

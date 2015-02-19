@@ -107,6 +107,7 @@ module.exports = function(grunt) {
     grunt.registerTask('build', []);
 
     grunt.registerTask('stage_deliver', ['build', 'deliver:stage']);
+    grunt.registerTask('stage_backup', ['deliver:stage']);
 
     grunt.registerTask('production_deliver', ['build', 'deliver:production']);
 
