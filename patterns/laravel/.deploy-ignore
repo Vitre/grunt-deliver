@@ -1,6 +1,9 @@
 app/storage/cache/
 app/storage/views/
 app/storage/sessions/
+app/storage/logs/
 tmp/
 env.php
 env.*.php
+artisan
+server.php
