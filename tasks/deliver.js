@@ -246,9 +246,11 @@ module.exports = function (grunt) {
         // Backup
         if (targetOptions.backup || grunt.option('backup')) {
             tasks.push(function (callback) {
-
                 var time = process.hrtime();
-                grunt.log.subhead('Backup started.'.blue + '(' + targetOptions.target.yellow + ' > ' + targetOptions.src.yellow + ')');
+
+                var backupPath = getBackupPath(targetOptions);
+
+                grunt.log.subhead('Backup started.'.blue + '(' + targetOptions.target.yellow + ' > ' + backupPath.yellow + ')');
                 if (!grunt.option('verbose') && !grunt.option('debug')) {
                     linger('Downloading...');
                 }
@@ -256,7 +258,7 @@ module.exports = function (grunt) {
                 driver.backup(extend({}, driverOptions, {
 
                     src: targetOptions.target,
-                    target: getBackupPath(targetOptions)
+                    target: backupPath
 
                 }), function (error) {
 
@@ -283,14 +285,17 @@ module.exports = function (grunt) {
         tasks.push(function (callback) {
 
             var time = process.hrtime();
-            grunt.log.subhead('Deploy started.'.blue + '(' + targetOptions.src.yellow + ' > ' + targetOptions.target.yellow + ')');
+
+            var sourcePath = getSourcePath(targetOptions.src);
+
+            grunt.log.subhead('Deploy started.'.blue + '(' + sourcePath.yellow + ' > ' + targetOptions.target.yellow + ')');
             if (!grunt.option('verbose') && !grunt.option('debug')) {
                 linger('Uploading...');
             }
 
             driver.deploy(extend({}, driverOptions, {
 
-                src: getSourcePath(targetOptions.src),
+                src: sourcePath,
                 target: targetOptions.target
 
             }), function (error) {
