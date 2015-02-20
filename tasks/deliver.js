@@ -197,11 +197,11 @@ module.exports = function (grunt) {
         // Secret
         var secret = getSecret();
         var host, user, password;
+        var targetu = task.target.toUpperCase();
 
         if (secret && typeof secret[this.target] !== 'undefined') {
 
             var targetSecret = secret[task.target];
-            var targetu = task.target.toUpperCase();
 
             host = grunt.option('host') || getProcessEnvVar('DELIVER_' + targetu + '_HOST') || targetSecret.host;
             user = grunt.option('user') || getProcessEnvVar('DELIVER_' + targetu + '_USER') || targetSecret.user;
