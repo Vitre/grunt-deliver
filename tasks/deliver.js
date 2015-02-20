@@ -127,9 +127,9 @@ module.exports = function (grunt) {
         var secretFile = process.cwd() + '/.deliver-secret.yml';
         if (grunt.file.exists(secretFile)) {
             return grunt.file.readYAML(secretFile);
-        } else {
-            grunt.fail.fatal('Secret file not found.');
         }
+
+        return false;
     }
 
     function initDriver(driver) {
@@ -196,9 +196,10 @@ module.exports = function (grunt) {
 
         // Secret
         var secret = getSecret();
-        if (typeof secret[this.target] !== 'undefined') {
+        var host, user, password;
 
-            var host, user, password;
+        if (secret && typeof secret[this.target] !== 'undefined') {
+
             var targetSecret = secret[task.target];
             var targetu = task.target.toUpperCase();
 
@@ -209,7 +210,13 @@ module.exports = function (grunt) {
             grunt.verbose.ok('Auth', host, user, password);
 
         } else {
-            grunt.fail.fatal('Secret target "' + this.target + '" not defined.');
+
+            grunt.log.ok('Secret file not found.');
+
+            host = grunt.option('host') || getProcessEnvVar('DELIVER_' + targetu + '_HOST');
+            user = grunt.option('user') || getProcessEnvVar('DELIVER_' + targetu + '_USER');
+            password = grunt.option('password') || getProcessEnvVar('DELIVER_' + targetu + '_PASSWORD');
+
         }
 
         // Driver init
