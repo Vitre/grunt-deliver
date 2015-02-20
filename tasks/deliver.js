@@ -257,8 +257,8 @@ module.exports = function (grunt) {
 
                 var backupPath = getBackupPath(targetOptions);
 
-                grunt.log.subhead('Backup started.'.blue + '(' + targetOptions.target.yellow + ' > ' + backupPath.yellow + ')');
-                if (!grunt.option('verbose') && !grunt.option('debug')) {
+                grunt.log.subhead('Backup started.'.blue + '(' + targetOptions.target.yellow + ' -> ' + backupPath.yellow + ')');
+                if (!grunt.option('no-interactive') && !grunt.option('verbose') && !grunt.option('debug')) {
                     linger('Downloading...');
                 }
 
@@ -271,7 +271,7 @@ module.exports = function (grunt) {
 
                     time = process.hrtime(time);
                     var timef = Math.round((time[0] + time[1] / 1000000000) * 10) / 10;
-                    if (!grunt.option('verbose') && !grunt.option('debug')) {
+                    if (!grunt.option('no-interactive') && !grunt.option('verbose') && !grunt.option('debug')) {
                         linger();
                     }
                     if (typeof error === 'object' && typeof error !== 'undefined' && error !== null) {
@@ -295,8 +295,8 @@ module.exports = function (grunt) {
 
             var sourcePath = getSourcePath(targetOptions.src);
 
-            grunt.log.subhead('Deploy started.'.blue + '(' + sourcePath.yellow + ' > ' + targetOptions.target.yellow + ')');
-            if (!grunt.option('verbose') && !grunt.option('debug')) {
+            grunt.log.subhead('Deploy started.'.blue + '(' + sourcePath.yellow + ' -> ' + targetOptions.target.yellow + ')');
+            if (!grunt.option('no-interactive') && !grunt.option('verbose') && !grunt.option('debug')) {
                 linger('Uploading...');
             }
 
@@ -309,7 +309,7 @@ module.exports = function (grunt) {
 
                 time = process.hrtime(time);
                 var timef = Math.round((time[0] + time[1] / 1000000000) * 10) / 10;
-                if (!grunt.option('verbose') && !grunt.option('debug')) {
+                if (!grunt.option('no-interactive') && !grunt.option('verbose') && !grunt.option('debug')) {
                     linger();
                 }
                 if (typeof error === 'object' && typeof error !== 'undefined' && error !== null) {
