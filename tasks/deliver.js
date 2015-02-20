@@ -19,8 +19,8 @@ var util = require('util');
 module.exports = function (grunt) {
 
     var default_deliver_ingore = [
-        '.grunt',
-        '.backup',
+        '.grunt/',
+        '.backup/',
         '.deliver-ignore',
         '.deliver-secret.yml'
     ];
@@ -38,7 +38,7 @@ module.exports = function (grunt) {
 
             trace: false,
 
-            cache: true,
+            driver_cache: false,
 
             sync_mode: false,
 
@@ -221,8 +221,8 @@ module.exports = function (grunt) {
             // Test
             function (callback) {
 
-                driver.test(function(error) {
-                    callback(typeof error !== 'undefined' ? new Error('Driver ' + targetOptions.driver.yellow + ' test failed.') : null);
+                driver.test(function (error) {
+                    callback(error !== null ? new Error('Driver ' + targetOptions.driver.yellow + ' test failed.') : null);
                 });
 
             }
@@ -236,7 +236,7 @@ module.exports = function (grunt) {
             ssl_verify_certificate: targetOptions.ssl_verify_certificate,
             passive_mode: targetOptions.passive_mode,
             trace: targetOptions.trace,
-            cache: targetOptions.cache,
+            cache: targetOptions.driver_cache,
             sync_mode: targetOptions.sync_mode,
             connection_limit: targetOptions.connection_limit,
             parallel_count: targetOptions.parallel_count,
@@ -248,7 +248,7 @@ module.exports = function (grunt) {
             tasks.push(function (callback) {
 
                 var time = process.hrtime();
-                grunt.log.subhead('Backup started.'.blue);
+                grunt.log.subhead('Backup started.'.blue + '(' + targetOptions.taget.yellow + ' > ' + targetOptions.src.yellow + ')');
                 if (!grunt.option('verbose') && !grunt.option('debug')) {
                     linger('Downloading...');
                 }
@@ -259,14 +259,13 @@ module.exports = function (grunt) {
                     target: getBackupPath(targetOptions)
 
                 }), function (error) {
-console.log(error);
 
                     time = process.hrtime(time);
                     var timef = Math.round((time[0] + time[1] / 1000000000) * 10) / 10;
                     if (!grunt.option('verbose') && !grunt.option('debug')) {
                         linger();
                     }
-                    if (typeof error === 'object') {
+                    if (typeof error === 'object' && typeof error !== 'undefined' && error !== null) {
                         grunt.log.error(error.message);
                         grunt.log.error('Backup failed.'.red + util.format(' (%ds)', timef).magenta);
                     } else {
@@ -284,7 +283,7 @@ console.log(error);
         tasks.push(function (callback) {
 
             var time = process.hrtime();
-            grunt.log.subhead('Deploy started.'.blue);
+            grunt.log.subhead('Deploy started.'.blue + '(' + targetOptions.src.yellow + ' > ' + targetOptions.target.yellow + ')');
             if (!grunt.option('verbose') && !grunt.option('debug')) {
                 linger('Uploading...');
             }
@@ -295,14 +294,13 @@ console.log(error);
                 target: targetOptions.target
 
             }), function (error) {
-                console.log(error);
 
                 time = process.hrtime(time);
                 var timef = Math.round((time[0] + time[1] / 1000000000) * 10) / 10;
                 if (!grunt.option('verbose') && !grunt.option('debug')) {
                     linger();
                 }
-                if (typeof error === 'object') {
+                if (typeof error === 'object' && typeof error !== 'undefined' && error !== null) {
                     grunt.log.error(error.message);
                     grunt.log.error('Deploy failed.'.red + util.format(' (%ds)', timef).magenta);
                 } else {
@@ -321,7 +319,7 @@ console.log(error);
             time = process.hrtime(time);
             var timef = Math.round((time[0] + time[1] / 1000000000) * 10) / 10;
 
-            if (typeof error === 'object') {
+            if (typeof error === 'object' && typeof error !== 'undefined' && error !== null) {
 
                 grunt.log.error(error.message);
                 grunt.fail.fatal('Deliver failed.' + util.format(' (%ds)', timef).magenta);
