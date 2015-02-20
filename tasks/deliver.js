@@ -248,7 +248,7 @@ module.exports = function (grunt) {
             tasks.push(function (callback) {
 
                 var time = process.hrtime();
-                grunt.log.subhead('Backup started.'.blue + '(' + targetOptions.taget.yellow + ' > ' + targetOptions.src.yellow + ')');
+                grunt.log.subhead('Backup started.'.blue + '(' + targetOptions.target.yellow + ' > ' + targetOptions.src.yellow + ')');
                 if (!grunt.option('verbose') && !grunt.option('debug')) {
                     linger('Downloading...');
                 }
