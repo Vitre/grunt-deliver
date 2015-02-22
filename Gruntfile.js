@@ -43,14 +43,8 @@ module.exports = function(grunt) {
                 src: 'dist',
                 target: '/beta',
                 backup: false,
-                upload: {
-                    connections: 10,
-                    parallel: 2
-                },
-                download: {
-                    connections: 20,
-                    parallel: 5
-                },
+                connection_limit: 10,
+                parallel_count: 5,
                 notify: ['slack', 'hipchat'],
                 messages: {
                     success: 'Delivery to "{target}" finished.',

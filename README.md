@@ -52,11 +52,11 @@ Type: `Object`
 #### cache
 Type: `Object`
 
-#### upload
-Type: `Object`
+#### connection_limit
+Type: `Integer`
 
-#### download
-Type: `Object`
+#### parallel_count
+Type: `Integer`
 
 #### notify
 Type: `Array`
