@@ -37,40 +37,28 @@ module.exports = function(grunt) {
 
         deliver: {
             options: {
-
                 driver: 'lftp',
-
                 patterns: ['git', 'github', 'sass', 'dev-node', 'laravel'],
-
                 auth: 'main',
-
                 src: 'dist',
-
                 target: '/beta',
-
                 backup: false,
-
                 upload: {
                     connections: 10,
                     parallel: 2
                 },
-
                 download: {
                     connections: 20,
                     parallel: 5
                 },
-
                 notify: ['slack', 'hipchat'],
-
                 messages: {
                     success: 'Delivery to "{target}" finished.',
                     fail: 'Delivery to "{target}" failed.'
                 },
-
                 cache: {
                     dirs: ['tmp', 'app/storage/cache', 'app/storage/views', 'app/storage/twig']
                 }
-
             },
 
             stage: {
