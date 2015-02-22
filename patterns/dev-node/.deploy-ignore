@@ -3,3 +3,4 @@ package.json
 Gruntfile.js
 .jshint
 .jshintrc
+npm-debug.log
