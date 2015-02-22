@@ -26,7 +26,7 @@ Task targets, files and options may be specified according to the grunt [Configu
 
 #### driver
 Type: `String`
-Default: `lftp`
+Default: `lftp` 
 Values: `lftp`, `rsync` (yet not supported)
 
 Declare protocol used for data transfer.
