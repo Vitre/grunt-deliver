@@ -25,15 +25,15 @@ Task targets, files and options may be specified according to the grunt [Configu
 ### Options
 
 #### driver
-Type: `String`
+Type: `String`  
 Default: `lftp`  
-Values: `lftp`, `rsync` (yet not supported)
+Values: `lftp`, `rsync` (yet not supported)  
 
 Declare protocol used for data transfer.
 
 #### patterns
-Type: `Array`
-Values: `bower`, `composer`, `dev-node`, `git`, `github`, `ide`, `laravel`, `npm`, `phpunit`, `sass`
+Type: `Array`  
+Values: `bower`, `composer`, `dev-node`, `git`, `github`, `ide`, `laravel`, `npm`, `phpunit`, `sass`  
 
 Identify project nature. Each pattern include some deploy ignore definitions.
 
