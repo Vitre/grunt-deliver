@@ -64,7 +64,7 @@ Type: `Array`
 #### messages
 Type: `Object`
 
-### Usage examples
+### Example
 
 #### Basic stage/production configuration
 
@@ -143,7 +143,7 @@ grunt.initConfig({
 You can define which files or folders needs to be excluded in `.deliver-ignore` file.  
 Wildchars are supported. For folders use `/` suffix.    
 
-### .deliver-ignore example
+### .deliver-ignore example:
 ```
 .git/
 node_modules/
@@ -154,9 +154,9 @@ temp/
 
 ## Secrets
 Secret data are stored in `.deliver-secret.yml` file for local development only.  
-If you do you have to put this filename to `.gitignore`!
+If you do put this filename to `.gitignore`!
   
-### .deliver-secret.yml example
+### .deliver-secret.yml example:
 ```yml
 stage:
   host: [HOSTNAME]
@@ -176,12 +176,12 @@ and consider to keep passwords encrypted.
 Task checks variables in this name format:  
 `DELIVER_[TASK_TARGET]_(HOST|USER|PASSWORD)`;
 
-#### Jenkins [EnvInject plugin](https://wiki.jenkins-ci.org/display/JENKINS/EnvInject+Plugin) example
+#### Jenkins [EnvInject plugin](https://wiki.jenkins-ci.org/display/JENKINS/EnvInject+Plugin) example:
 ```ini
 DELIVER_STAGE_HOST=yourhost.com  
 DELIVER_STAGE_USER=username  
 ```
-Put passwords in "password values" section.
+Store passwords in "password values" section.
  
 ---  
 
