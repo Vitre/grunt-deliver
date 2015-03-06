@@ -7,7 +7,7 @@
 
 'use strict';
 
-module.exports = function(grunt) {
+module.exports = function (grunt) {
 
     require('time-grunt')(grunt);
 
@@ -45,6 +45,9 @@ module.exports = function(grunt) {
                 backup: false,
                 connection_limit: 10,
                 parallel_count: 5,
+                maintenance: {
+                    htaccess: true
+                },
                 notify: ['slack', 'hipchat'],
                 messages: {
                     success: 'Delivery to "{target}" finished.',
@@ -60,7 +63,10 @@ module.exports = function(grunt) {
                 branch: 'develop',
                 auth: 'stage',
                 src: 'test',
-                target: '/deliver'
+                target: '/deliver',
+                backup: {
+                    stamp: 'yyyymmddHHMMss'
+                }
             },
 
             production: {

@@ -139,4 +139,50 @@ grunt.initConfig({
 });
 ```
 
+## Ignore file
+You can define which files or folders needs to be excluded in `.deliver-ignore` file.  
+Wildchars are supported. For folders use `/` suffix.    
+
+### .deliver-ignore example
+```
+.git/
+node_modules/
+temp/
+.deliver-secret.yml
+.gitignore
+```
+
+## Secrets
+Secret data are stored in `.deliver-secret.yml` file for local development only.  
+If you do you have to put this filename to `.gitignore`!
+  
+### .deliver-secret.yml example
+```yml
+stage:
+  host: [HOSTNAME]
+  user: [USERNAME]
+  password: [PASSWORD]
+
+production:
+  host: [HOSTNAME]
+  user: [USERNAME]
+  password: [PASSWORD]
+```
+
+### Environment variables
+For building on your production runners like Jenkins, etc. use environment variables 
+and consider to keep passwords encrypted.  
+
+Task checks variables in this name format:  
+`DELIVER_[TASK_TARGET]_(HOST|USER|PASSWORD)`;
+
+#### Jenkins [EnvInject plugin](https://wiki.jenkins-ci.org/display/JENKINS/EnvInject+Plugin) example
+```ini
+DELIVER_STAGE_HOST=yourhost.com  
+DELIVER_STAGE_USER=username  
+```
+Put passwords in "password values" section.
+ 
+---  
+
 ## Release history

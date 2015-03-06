@@ -82,6 +82,11 @@ module.exports = function (grunt) {
             commands.push('set mirror:parallel-transfer-count ' + options.parallel_count);
         }
 
+        // Xfer clobber
+        if (typeof options.xfer_clobber !== 'undefined') {
+            commands.push('set xfer:clobber ' + lftpBool(options.xfer_clobber));
+        }
+
         return commands;
     }
 
@@ -179,6 +184,45 @@ module.exports = function (grunt) {
 
                 }
 
+            });
+
+        },
+
+        /**
+         * Maintenance set
+         */
+        setMaintenance: function (target, options, callback) {
+
+            // Login
+            var commands = [
+                getLoginCommand(options)
+            ];
+
+            commands = commands.concat(getInitCommands(extend({}, options, {
+                xfer_clobber: true
+            })));
+
+            // Source
+            if (options.src !== false) {
+                commands.push('lcd ' + options.src);
+            }
+            
+            // Put
+            var put = '.htaccess.' + target;
+
+            if (grunt.option('no-write')) {
+                put += ' --dry-run';
+            }
+
+            commands.push(put);
+
+            // Bye
+            commands.push('bye');
+
+            // Processing
+            
+            var lftp = initExecProcess(commands, function (error, stdout, stderr) {
+                callback(error !== null ? new Error(error) : null);
             });
 
         },

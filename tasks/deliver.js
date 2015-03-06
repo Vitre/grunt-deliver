@@ -24,42 +24,42 @@ module.exports = function (grunt) {
         '.deliver-ignore',
         '.deliver-secret.yml'
     ];
+    
+    var default_backup_stamp = 'yyyy-mm-dd-HH-MM-ss';
 
     //---
 
     function getOptions(task) {
-        return task.options({
-
+        var options = task.options({
             driver: false,
-
             ssl_verify_certificate: false,
-
             passive_mode: true,
-
             trace: false,
-
             driver_cache: false,
-
             sync_mode: false,
-
             connection_limit: 4,
-
             parallel_count: 2,
-
             auth: 'main',
-
             src: false,
-
             target: false,
-
             backup: false,
-
             messages: {
                 success: 'Delivery to "{target}" finished.',
                 fail: 'Delivery to "{target}" failed.'
             }
-
         });
+
+        // Backup
+        var backup_defaults = {
+            enabled: false,
+            stamp: default_backup_stamp,
+            dir: path.join(process.cwd(), '/.backup/')
+        };
+        if (typeof options.backup === 'boolean') {
+            options.backup = extend({}, backup_defaults, { enabled: options.backup });
+        }
+                
+        return options;
     }
 
     function readIgnoreFile(file) {
@@ -153,15 +153,21 @@ module.exports = function (grunt) {
         return sourcePath;
     }
 
-    function getBackupPath(options) {
-        var stamp = grunt.template.today('yyyy-mm-dd-HH-MM-ss');
-
+    function getBackupPath(target, options) {
+        
         var dir;
-        if (options.backup_dir) {
-            dir = options.backup_dir;
+        
+        if (options.backup.dir) {
+            dir = options.backup.dir;
         } else {
-            dir = path.join(process.cwd(), '/.backup/' + stamp);
+            dir = path.join(process.cwd(), '/.backup/');
         }
+        
+        var stamp = grunt.template.today(options.backup.stamp);
+        
+        var folder = target + '_' + stamp;
+
+        dir = path.join(dir, folder);
 
         return dir;
     }
@@ -178,6 +184,9 @@ module.exports = function (grunt) {
         var task = this;
         var done = this.async();
 
+        // Command options
+        grunt.verbose.writeln('command options: '.yellow, JSON.stringify(grunt.option.flags(), null, 2));
+        
         // Options
         var options = getOptions(this);
         grunt.verbose.writeln('options: '.yellow, JSON.stringify(options, null, 2));
@@ -255,10 +264,10 @@ module.exports = function (grunt) {
             tasks.push(function (callback) {
                 var time = process.hrtime();
 
-                var backupPath = getBackupPath(targetOptions);
+                var backupPath = getBackupPath(task.target, targetOptions);
 
                 grunt.log.subhead('Backup started.'.blue + '(' + targetOptions.target.yellow + ' -> ' + backupPath.yellow + ')');
-                if (!grunt.option('no-interactive') && !grunt.option('verbose') && !grunt.option('debug')) {
+                if (grunt.option('interactive') && !grunt.option('verbose') && !grunt.option('debug')) {
                     linger('Downloading...');
                 }
 
@@ -271,7 +280,7 @@ module.exports = function (grunt) {
 
                     time = process.hrtime(time);
                     var timef = Math.round((time[0] + time[1] / 1000000000) * 10) / 10;
-                    if (!grunt.option('no-interactive') && !grunt.option('verbose') && !grunt.option('debug')) {
+                    if (grunt.option('interactive') && !grunt.option('verbose') && !grunt.option('debug')) {
                         linger();
                     }
                     if (typeof error === 'object' && typeof error !== 'undefined' && error !== null) {
@@ -296,7 +305,7 @@ module.exports = function (grunt) {
             var sourcePath = getSourcePath(targetOptions.src);
 
             grunt.log.subhead('Deploy started.'.blue + '(' + sourcePath.yellow + ' -> ' + targetOptions.target.yellow + ')');
-            if (!grunt.option('no-interactive') && !grunt.option('verbose') && !grunt.option('debug')) {
+            if (grunt.option('interactive') && !grunt.option('verbose') && !grunt.option('debug')) {
                 linger('Uploading...');
             }
 
@@ -309,7 +318,7 @@ module.exports = function (grunt) {
 
                 time = process.hrtime(time);
                 var timef = Math.round((time[0] + time[1] / 1000000000) * 10) / 10;
-                if (!grunt.option('no-interactive') && !grunt.option('verbose') && !grunt.option('debug')) {
+                if (grunt.option('interactive') && !grunt.option('verbose') && !grunt.option('debug')) {
                     linger();
                 }
                 if (typeof error === 'object' && typeof error !== 'undefined' && error !== null) {
