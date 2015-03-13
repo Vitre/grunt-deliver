@@ -170,7 +170,7 @@ production:
 ```
 
 ### Environment variables
-For building on your production runners like Jenkins, etc. use environment variables 
+For building with your production runners like Jenkins, etc. use environment variables 
 and consider to keep passwords encrypted.  
 
 Task checks variables in this name format:  

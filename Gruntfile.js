@@ -94,8 +94,10 @@ module.exports = function (grunt) {
     grunt.registerTask('watch_dev', ['watch']);
     grunt.registerTask('build', []);
 
+    grunt.registerTask('stage_maintenance_set', ['build', 'deliver_maintenance_set:stage']);
+    grunt.registerTask('stage_maintenance_unset', ['build', 'deliver_maintenance_unset:stage']);
     grunt.registerTask('stage_deliver', ['build', 'deliver:stage']);
-    grunt.registerTask('stage_backup', ['deliver:stage']);
+    grunt.registerTask('stage_backup', ['deliver_backup:stage']);
 
     grunt.registerTask('production_deliver', ['build', 'deliver:production']);
 
