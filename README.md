@@ -78,7 +78,7 @@ grunt.initConfig({
             driver: 'lftp',
 
             // Project patterns: bower, composer, dev-node, git, github, ide, laravel, npm, phpunit, sass
-            patterns: ['git', 'github', 'sass', 'dev-node', 'laravel'],
+            patterns: ['git', 'github', 'sass', 'bower', 'npm', 'dev-node', 'laravel'],
 
             // Authorisation key
             auth: 'main',
