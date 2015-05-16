@@ -36,7 +36,7 @@ module.exports = function (grunt) {
     }
 
     function getLoginCommand(options) {
-        return 'open -u {user},{password} {host}'.replace('{user}', options.user).replace('{password}', options.password).replace('{host}', options.host);
+        return 'open -u "{user}","{password}" {host}'.replace('{user}', options.user).replace('{password}', options.password).replace('{host}', options.host);
     }
 
     function getCommandString(command) {
@@ -206,7 +206,7 @@ module.exports = function (grunt) {
             if (options.src !== false) {
                 commands.push('lcd ' + options.src);
             }
-            
+
             // Put
             var put = '.htaccess.' + target;
 
@@ -220,7 +220,7 @@ module.exports = function (grunt) {
             commands.push('bye');
 
             // Processing
-            
+
             var lftp = initExecProcess(commands, function (error, stdout, stderr) {
                 callback(error !== null ? new Error(error) : null);
             });
