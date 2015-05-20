@@ -36,7 +36,7 @@ module.exports = function (grunt) {
     }
 
     function getLoginCommand(options) {
-        return 'open -u {user},{password} {host}'.replace('{user}', options.user).replace('{password}', options.password).replace('{host}', options.host);
+        return 'open -u "{user}","{password}" {host}'.replace('{user}', options.user).replace('{password}', options.password).replace('{host}', options.host);
     }
 
     function getCommandString(command) {
