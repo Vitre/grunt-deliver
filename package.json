@@ -25,6 +25,7 @@
   "homepage": "https://github.com/Vitre/grunt-deliver",
   "devDependencies": {
     "grunt": "~0.4.5",
+    "grunt-available-tasks": "^0.5.7",
     "grunt-cli": "~0.1.13",
     "grunt-contrib-jshint": "~0.11.0",
     "grunt-contrib-watch": "~0.6.1",
