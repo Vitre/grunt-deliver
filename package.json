@@ -23,6 +23,7 @@
     "url": "https://github.com/Vitre/grunt-deliver/issues"
   },
   "homepage": "https://github.com/Vitre/grunt-deliver",
+  "engine": "node >= 0.12.0",
   "devDependencies": {
     "grunt": "~0.4.5",
     "grunt-available-tasks": "^0.5.7",
