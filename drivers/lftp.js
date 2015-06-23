@@ -15,6 +15,8 @@ var cp = require('child_process');
 
 module.exports = function (grunt) {
 
+    var default_protocol = 'sftp';
+
     var command_response_timeout = 750;
 
     var mirror_default_options = [
@@ -35,8 +37,20 @@ module.exports = function (grunt) {
         return value ? 'on' : 'off';
     }
 
-    function getLoginCommand(options) {
-        return 'open -u "{user}","{password}" {host}'.replace('{user}', options.user).replace('{password}', options.password).replace('{host}', options.host);
+    function getUri(options) {
+        return '{protocol}://{user}:{password}@{host}'
+            .replace('{protocol}', options.protocol)
+            .replace('{host}', options.host)
+            .replace('{user}', options.user)
+            .replace('{password}', options.password);
+    }
+
+    function getOpenCommand(options) {
+        return 'open -u "{user}","{password}" {host}'
+            .replace('{host}', options.host)
+            .replace('{user}', options.user)
+            .replace('{password}', options.password)
+            .replace('{uri}', getUri(options));
     }
 
     function getCommandString(command) {
@@ -45,6 +59,8 @@ module.exports = function (grunt) {
 
     function getInitCommands(options) {
         var commands = [];
+
+        commands.push('set cmd:default-protocol ' + options.protocol);
 
         // SSL certificates
         if (typeof options.ssl_verify_certificate !== 'undefined') {
@@ -80,6 +96,11 @@ module.exports = function (grunt) {
         // Parallel transfer count
         if (typeof options.parallel_count !== 'undefined') {
             commands.push('set mirror:parallel-transfer-count ' + options.parallel_count);
+        }
+
+        // Xfer clobber
+        if (typeof options.xfer_clobber !== 'undefined') {
+            commands.push('set xfer:clobber ' + lftpBool(options.xfer_clobber));
         }
 
         return commands;
@@ -184,13 +205,52 @@ module.exports = function (grunt) {
         },
 
         /**
+         * Maintenance set
+         */
+        setMaintenance: function (target, options, callback) {
+
+            // Open
+            var commands = [
+                getOpenCommand(options)
+            ];
+
+            commands = commands.concat(getInitCommands(extend({}, options, {
+                xfer_clobber: true
+            })));
+
+            // Source
+            if (options.src !== false) {
+                commands.push('lcd ' + options.src);
+            }
+
+            // Put
+            var put = '.htaccess.' + target;
+
+            if (grunt.option('no-write')) {
+                put += ' --dry-run';
+            }
+
+            commands.push(put);
+
+            // Bye
+            commands.push('bye');
+
+            // Processing
+
+            var lftp = initExecProcess(commands, function (error, stdout, stderr) {
+                callback(error !== null ? new Error(error) : null);
+            });
+
+        },
+
+        /**
          * Backup method
          */
         backup: function (options, callback) {
 
-            // Login
+            // Open
             var commands = [
-                getLoginCommand(options)
+                getOpenCommand(options)
             ];
 
             commands = commands.concat(getInitCommands(options));
@@ -286,9 +346,9 @@ module.exports = function (grunt) {
          */
         deploy: function (options, callback) {
 
-            // Login
+            // Open
             var commands = [
-                getLoginCommand(options)
+                getOpenCommand(options)
             ];
 
             commands = commands.concat(getInitCommands(options));
