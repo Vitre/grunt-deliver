@@ -42,6 +42,7 @@ module.exports = function (grunt) {
         deliver: {
             options: {
                 driver: 'lftp',
+                protocol: 'sftp',
                 patterns: ['git', 'github', 'sass', 'dev-node', 'laravel'],
                 auth: 'main',
                 src: 'dist',

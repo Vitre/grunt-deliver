@@ -32,6 +32,7 @@ module.exports = function (grunt) {
     function getOptions(task) {
         var options = task.options({
             driver: false,
+            protocol: 'sftp',
             ssl_verify_certificate: false,
             passive_mode: true,
             trace: false,
@@ -352,6 +353,7 @@ module.exports = function (grunt) {
 
         // Driver options
         var driverOptions = {
+            protocol: run.targetOptions.protocol,
             host: run.host,
             user: run.user,
             password: run.password,
@@ -409,6 +411,7 @@ module.exports = function (grunt) {
 
         // Driver options
         var driverOptions = {
+            protocol: run.targetOptions.protocol,
             host: run.host,
             user: run.user,
             password: run.password,
@@ -428,7 +431,7 @@ module.exports = function (grunt) {
         }];
 
         // Backup
-        if (backupEnabled(run) || grunt.option('backup')) {
+        if (!grunt.option('no-backup') && (backupEnabled(run) || grunt.option('backup'))) {
             tasks.push(function (callback) {
                 return cleanBackupsTask(run, driverOptions, callback);
             });
