@@ -184,12 +184,15 @@ module.exports = function (grunt) {
         if (fs.existsSync(path)) {
             var dir = fs.readdirSync(path);
             grunt.verbose.writeln('Index:', JSON.stringify(dir, null, 0).grey);
-            var exceeds = dir.slice(-(dir.length - keep));
-            grunt.verbose.writeln('Exceeding:'.red, JSON.stringify(exceeds, null, 0).grey);
-            for (var k in exceeds) {
-                var dirPath = path + '/' + exceeds[k];
-                rm('-rf', dirPath);
-                grunt.verbose.ok('Backup job', dirPath.grey, 'unlinked'.green);
+            var exceedsSize = dir.length - keep;
+            if (exceedsSize > 0) {
+                var exceeds = dir.slice(-exceedsSize);
+                grunt.verbose.writeln('Exceeding:'.red, JSON.stringify(exceeds, null, 0).grey);
+                for (var k in exceeds) {
+                    var dirPath = path + '/' + exceeds[k];
+                    rm('-rf', dirPath);
+                    grunt.verbose.ok('Backup job', dirPath.grey, 'unlinked'.green);
+                }
             }
         }
     }
