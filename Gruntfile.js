@@ -48,8 +48,8 @@ module.exports = function (grunt) {
                 src: 'dist',
                 target: '/beta',
                 backup: false,
-                connection_limit: 10,
-                parallel_count: 4,
+                connection_limit: 7,
+                parallel_count: 2,
                 maintenance: {
                     htaccess: true
                 },
@@ -74,8 +74,8 @@ module.exports = function (grunt) {
                     stamp: 'yyyymmddHHMMss',
                     keep: 4
                 },
-                connection_limit: 7,
-                parallel_count: 2
+                connection_limit: 20,
+                parallel_count: 10
             },
 
             production: {

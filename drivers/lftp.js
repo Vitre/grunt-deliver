@@ -46,11 +46,11 @@ module.exports = function (grunt) {
     }
 
     function getOpenCommand(options) {
-        return 'open -u "{user}","{password}" {host}'
-            .replace('{host}', options.host)
-            .replace('{user}', options.user)
-            .replace('{password}', options.password)
-            .replace('{uri}', getUri(options));
+        return ('open -u ' + (options.user ? '"{user}"' : '') + (options.password ? ',"{password}" ' : ' ') + '{host}')
+                .replace('{host}', options.host)
+                .replace('{user}', options.user)
+                .replace('{password}', options.password)
+                .replace('{uri}', getUri(options));
     }
 
     function getCommandString(command) {
