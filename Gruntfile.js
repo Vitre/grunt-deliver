@@ -58,9 +58,7 @@ module.exports = function (grunt) {
                     success: 'Delivery to "{target}" finished.',
                     fail: 'Delivery to "{target}" failed.'
                 },
-                cache: {
-                    dirs: ['tmp', 'app/storage/cache', 'app/storage/views', 'app/storage/twig']
-                }
+                cache: ['tmp', 'app/storage/cache', 'app/storage/views', 'app/storage/twig']
             },
 
             stage: {

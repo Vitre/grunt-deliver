@@ -46,11 +46,12 @@ module.exports = function (grunt) {
     }
 
     function getOpenCommand(options) {
-        return ('open -u ' + (options.user ? '"{user}"' : '') + (options.password ? ',"{password}" ' : ' ') + '{host}')
+        var cmd = ('open -u ' + (options.user ? '"{user}"' : '') + (options.password ? ',"{password}" ' : ' ') + '{host}')
                 .replace('{host}', options.host)
                 .replace('{user}', options.user)
                 .replace('{password}', options.password)
                 .replace('{uri}', getUri(options));
+        return cmd;
     }
 
     function getCommandString(command) {
@@ -285,60 +286,10 @@ module.exports = function (grunt) {
             commands.push('bye;');
 
             // Processing
-            if (true) {
+            var lftp = initExecProcess(commands, function (error, stdout, stderr) {
+                callback(error !== null ? new Error(error) : null);
+            });
 
-                var lftp = initExecProcess(commands, function (error, stdout, stderr) {
-                    callback(error !== null ? new Error(error) : null);
-                });
-
-            } else {
-
-                var lftp = initStreamedProcess();
-
-                var commandError = false;
-
-                lftp.stderr.on('data', function (data) {
-
-                    commandError = data.toString();
-                    grunt.verbose.errorlns(commandError);
-
-                    lastSeriesCallback(new Error(commandError));
-                });
-
-                // Commands exec
-                var lastSeriesCallback;
-
-                async.eachSeries(commands, function (item, seriesCallback) {
-
-                    lastSeriesCallback = seriesCallback;
-
-                    var command = getCommandString(item);
-
-                    grunt.verbose.ok(command);
-
-                    if (commandError) {
-
-                        seriesCallback(new Error(commandError));
-
-                    } else {
-
-                        lftp.stdin.write(command, function (error) {
-                            setTimeout(function () {
-                                seriesCallback(error !== null ? new Error(error) : null);
-                            }, command_response_timeout);
-
-                        });
-
-                    }
-
-                }, function (error) {
-
-                    lftp.stdin.end();
-
-                    callback(error);
-
-                });
-            }
         },
 
         /**
@@ -380,60 +331,10 @@ module.exports = function (grunt) {
             commands.push('bye;');
 
             // Processing
-            if (true) {
+            var lftp = initExecProcess(commands, function (error, stdout, stderr) {
+                callback(error !== null ? new Error(error) : null);
+            });
 
-                var lftp = initExecProcess(commands, function (error, stdout, stderr) {
-                    callback(error !== null ? new Error(error) : null);
-                });
-
-            } else {
-
-                var lftp = initStreamedProcess();
-
-                var commandError = false;
-
-                lftp.stderr.on('data', function (data) {
-
-                    commandError = data.toString();
-                    grunt.verbose.errorlns(commandError);
-
-                    lastSeriesCallback(new Error(commandError));
-                });
-
-                // commands exec
-                var lastSeriesCallback;
-
-                async.eachSeries(commands, function (item, seriesCallback) {
-
-                    lastSeriesCallback = seriesCallback;
-
-                    var command = getCommandString(item);
-
-                    grunt.verbose.ok(command);
-
-                    if (commandError) {
-
-                        seriesCallback(new Error(commandError));
-
-                    } else {
-
-                        lftp.stdin.write(command, function (error) {
-                            setTimeout(function () {
-                                seriesCallback(error ? new Error(error) : null);
-                            }, command_response_timeout);
-                        });
-
-                    }
-
-                }, function (error) {
-
-                    lftp.stdin.end();
-
-                    callback(error);
-
-                });
-
-            }
         },
 
         /**
@@ -454,7 +355,7 @@ module.exports = function (grunt) {
             }
 
             for (var i = 0; i < options.cache.length; i++) {
-                var rm = 'glob -a rm -r ' + options.cache[i];
+                var rm = 'glob -a rm -rf ' + options.cache[i];
 
                 if (grunt.option('no-write')) {
                     rm += ' --dry-run';

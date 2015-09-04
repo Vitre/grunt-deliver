@@ -241,9 +241,9 @@ module.exports = function (grunt) {
         var secret = getSecret();
         var targetu = run.task.target.toUpperCase();
 
-        if (secret && typeof secret[options.auth] !== 'undefined') {
+        if (secret && typeof secret[run.targetOptions.auth] !== 'undefined') {
 
-            var targetSecret = secret[options.auth];
+            var targetSecret = secret[run.targetOptions.auth];
 
             run.host = grunt.option('host') || getProcessEnvVar('DELIVER_' + targetu + '_HOST') || targetSecret.host;
             run.user = grunt.option('user') || getProcessEnvVar('DELIVER_' + targetu + '_USER') || targetSecret.user;
@@ -287,7 +287,7 @@ module.exports = function (grunt) {
         var backupPath = getBackupPath(run.task.target, run.targetOptions);
 
         grunt.log.subhead('Backup started.'.blue + '(' + run.targetOptions.target.yellow + ' -> ' + backupPath.yellow + ')');
-        if (grunt.option('interactive') && !grunt.option('no-interactive')) {
+        if (!grunt.option('no-interactive')) {
             linger('Downloading...');
         }
 
@@ -300,7 +300,7 @@ module.exports = function (grunt) {
 
             var time = process.hrtime(run.time);
             var timef = Math.round((time[0] + time[1] / 1000000000) * 10) / 10;
-            if (grunt.option('interactive') && !grunt.option('no-interactive')) {
+            if (!grunt.option('no-interactive')) {
                 linger(false);
             }
             if (typeof error === 'object' && typeof error !== 'undefined' && error !== null) {
@@ -320,7 +320,7 @@ module.exports = function (grunt) {
         var sourcePath = getSourcePath(run.targetOptions.src);
 
         grunt.log.subhead('Deploy started.'.blue + '(' + sourcePath.yellow + ' -> ' + run.targetOptions.target.yellow + ')');
-        if (grunt.option('interactive') && !grunt.option('no-interactive')) {
+        if (!grunt.option('no-interactive')) {
             linger('Uploading...');
         }
 
@@ -333,7 +333,7 @@ module.exports = function (grunt) {
 
             var time = process.hrtime(run.time);
             var timef = Math.round((time[0] + time[1] / 1000000000) * 10) / 10;
-            if (grunt.option('interactive') && !grunt.option('no-interactive')) {
+            if (!grunt.option('no-interactive')) {
                 linger(false);
             }
             if (typeof error === 'object' && typeof error !== 'undefined' && error !== null) {
