@@ -49,6 +49,10 @@ Type: `String`
 #### backup
 Type: `Object`
 
+ - enabled: true,
+ - stamp: 'yyyymmddHHMMss',
+ - keep: 4
+
 #### cache
 Type: `Object`
 
@@ -89,8 +93,12 @@ grunt.initConfig({
             // Default target path
             target: '/beta',
 
-            // Default backup first option
-            backup: false,
+            // Default backup option
+            backup: {
+                enabled: false,
+                stamp: 'yyyymmddHHMMss',
+                keep: 4
+            },
 
             // Project cache
             cache: {

@@ -32,6 +32,7 @@ module.exports = function (grunt) {
     function getOptions(task) {
         var options = task.options({
             driver: false,
+            protocol: 'sftp',
             ssl_verify_certificate: false,
             passive_mode: true,
             trace: false,
@@ -53,7 +54,8 @@ module.exports = function (grunt) {
         var backup_defaults = {
             enabled: false,
             stamp: default_backup_stamp,
-            dir: path.join(process.cwd(), '/.backup/')
+            dir: path.join(process.cwd(), '/.backup/'),
+            keep: 4
         };
         if (typeof options.backup === 'boolean') {
             options.backup = extend({}, backup_defaults, { enabled: options.backup });
@@ -153,8 +155,7 @@ module.exports = function (grunt) {
         return sourcePath;
     }
 
-    function getBackupPath(target, options) {
-
+    function getBackupRoot(options) {
         var dir;
 
         if (options.backup.dir) {
@@ -163,17 +164,49 @@ module.exports = function (grunt) {
             dir = path.join(process.cwd(), '/.backup/');
         }
 
+        return dir;
+    }
+
+    function getBackupTargetDir(target, options) {
+        return getBackupRoot(options) + target;
+    }
+
+    function getBackupPath(target, options) {
+        var dir = getBackupTargetDir(target, options);
         var stamp = grunt.template.today(options.backup.stamp);
-
-        var folder = target + '_' + stamp;
-
+        var folder = stamp;
         dir = path.join(dir, folder);
 
         return dir;
     }
 
+    function cleanBackups(path, keep) {
+        if (fs.existsSync(path)) {
+            var dir = fs.readdirSync(path);
+            grunt.verbose.writeln('Index:', JSON.stringify(dir, null, 0).grey);
+            var exceedsSize = dir.length - keep;
+            if (exceedsSize > 0) {
+                var exceeds = dir.slice(-exceedsSize);
+                grunt.verbose.writeln('Exceeding:'.red, JSON.stringify(exceeds, null, 0).grey);
+                for (var k in exceeds) {
+                    var dirPath = path + '/' + exceeds[k];
+                    rm('-rf', dirPath);
+                    grunt.verbose.ok('Backup job', dirPath.grey, 'unlinked'.green);
+                }
+            }
+        }
+    }
+
     function getProcessEnvVar(name) {
         return typeof process.env[name] !== 'undefined' ? process.env[name] : null;
+    }
+
+    function backupEnabled(run) {
+        return run.targetOptions.backup === true
+            || (
+            typeof run.targetOptions.backup === 'object'
+            && (typeof run.targetOptions.backup.enabled === 'undefined' || run.targetOptions.backup.enabled)
+            );
     }
 
     function initRun(task) {
@@ -185,29 +218,29 @@ module.exports = function (grunt) {
         };
 
         // Command options
-        grunt.verbose.writeln('command options: '.yellow, JSON.stringify(grunt.option.flags(), null, 2));
+        grunt.verbose.writeln('command options:'.yellow, JSON.stringify(grunt.option.flags(), null, 2));
 
         // Options
-        var options = getOptions(this);
-        grunt.verbose.writeln('options: '.yellow, JSON.stringify(options, null, 2));
+        var options = getOptions(task);
+        grunt.verbose.writeln('options:'.yellow, JSON.stringify(options, null, 2));
 
         // Target options
         run.targetOptions = extend({}, options, run.task.data);
-        grunt.verbose.writeln('target_options: '.yellow, JSON.stringify(run.targetOptions, null, 2));
+        grunt.verbose.writeln('target_options:'.yellow, JSON.stringify(run.targetOptions, null, 2));
 
         // Pattern
         run.pattern = getMultiPattern(run.targetOptions.patterns);
-        grunt.verbose.writeln('pattern: '.yellow, JSON.stringify(run.pattern, null, 2));
+        grunt.verbose.writeln('pattern:'.yellow, JSON.stringify(run.pattern, null, 2));
 
         // Deploy ignore
         run.deployIgnore = getIgnore(run.pattern);
-        grunt.verbose.writeln('deploy_ignore: '.yellow, JSON.stringify(run.deployIgnore, null, 2));
+        grunt.verbose.writeln('deploy_ignore:'.yellow, JSON.stringify(run.deployIgnore, null, 2));
 
         // Secret
         var secret = getSecret();
         var targetu = run.task.target.toUpperCase();
 
-        if (secret && typeof secret[this.target] !== 'undefined') {
+        if (secret && typeof secret[task.target] !== 'undefined') {
 
             var targetSecret = secret[run.task.target];
 
@@ -215,7 +248,7 @@ module.exports = function (grunt) {
             run.user = grunt.option('user') || getProcessEnvVar('DELIVER_' + targetu + '_USER') || targetSecret.user;
             run.password = grunt.option('password') || getProcessEnvVar('DELIVER_' + targetu + '_PASSWORD') || targetSecret.password;
 
-            grunt.verbose.ok('Auth', host, user, password);
+            grunt.verbose.writeln('Auth'.blue, run.host, run.user, run.password.grey);
 
         } else {
 
@@ -235,10 +268,17 @@ module.exports = function (grunt) {
 
     function testTask(run, driverOptions, callback) {
 
-        driver.test(function (error) {
+        run.driver.test(function (error) {
             callback(error !== null ? new Error('Driver ' + run.targetOptions.driver.yellow + ' test failed.') : null);
         });
 
+    }
+
+    function cleanBackupsTask(run, driverOptions, callback) {
+        var path = getBackupTargetDir(run.task.target, run.targetOptions);
+        grunt.verbose.writeln('Cleaning backups...'.yellow, 'keep:', run.targetOptions.backup.keep.toString().blue, path.grey);
+        cleanBackups(path, run.targetOptions.backup.keep - 1);
+        callback(false);
     }
 
     function backupTask(run, driverOptions, callback) {
@@ -249,7 +289,7 @@ module.exports = function (grunt) {
             linger('Downloading...');
         }
 
-        driver.backup(extend({}, driverOptions, {
+        run.driver.backup(extend({}, driverOptions, {
 
             src: run.targetOptions.target,
             target: backupPath
@@ -282,7 +322,7 @@ module.exports = function (grunt) {
             linger('Uploading...');
         }
 
-        driver.deploy(extend({}, driverOptions, {
+        run.driver.deploy(extend({}, driverOptions, {
 
             src: sourcePath,
             target: run.targetOptions.target
@@ -316,6 +356,7 @@ module.exports = function (grunt) {
 
         // Driver options
         var driverOptions = {
+            protocol: run.targetOptions.protocol,
             host: run.host,
             user: run.user,
             password: run.password,
@@ -330,11 +371,18 @@ module.exports = function (grunt) {
         };
 
         // Async series
-        var tasks = [function(callback) { return testTask(run, driverOptions, callback) }];
+        var tasks = [function (callback) {
+            return testTask(run, driverOptions, callback)
+        }];
 
         // Backup
-        if (run.targetOptions.backup || grunt.option('backup')) {
-            tasks.push(function(callback) { return backupTask(run, driverOptions, callback); });
+        if (backupEnabled(run)) {
+            tasks.push(function (callback) {
+                return cleanBackupsTask(run, driverOptions, callback);
+            });
+            tasks.push(function (callback) {
+                return backupTask(run, driverOptions, callback);
+            });
         }
 
         // Tasks execution
@@ -366,6 +414,7 @@ module.exports = function (grunt) {
 
         // Driver options
         var driverOptions = {
+            protocol: run.targetOptions.protocol,
             host: run.host,
             user: run.user,
             password: run.password,
@@ -380,15 +429,24 @@ module.exports = function (grunt) {
         };
 
         // Async series
-        var tasks = [function(callback) { return testTask(run, driverOptions, callback); }];
+        var tasks = [function (callback) {
+            return testTask(run, driverOptions, callback);
+        }];
 
         // Backup
-        if (run.targetOptions.backup || grunt.option('backup')) {
-            tasks.push(function(callback) { return backupTask(run, driverOptions, callback); });
+        if (!grunt.option('no-backup') && (backupEnabled(run) || grunt.option('backup'))) {
+            tasks.push(function (callback) {
+                return cleanBackupsTask(run, driverOptions, callback);
+            });
+            tasks.push(function (callback) {
+                return backupTask(run, driverOptions, callback);
+            });
         }
 
         // Deploy
-        tasks.push(function(callback) { return deployTask(run, driverOptions, callback); });
+        tasks.push(function (callback) {
+            return deployTask(run, driverOptions, callback);
+        });
 
         // Tasks execution
         async.series(tasks, function (error) {

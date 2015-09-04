@@ -35,16 +35,21 @@ module.exports = function (grunt) {
             }
         },
 
+        availabletasks: {
+            tasks: {}
+        },
+
         deliver: {
             options: {
                 driver: 'lftp',
+                protocol: 'sftp',
                 patterns: ['git', 'github', 'sass', 'dev-node', 'laravel'],
                 auth: 'main',
                 src: 'dist',
                 target: '/beta',
                 backup: false,
                 connection_limit: 10,
-                parallel_count: 5,
+                parallel_count: 4,
                 maintenance: {
                     htaccess: true
                 },
@@ -63,17 +68,21 @@ module.exports = function (grunt) {
                 branch: 'develop',
                 auth: 'stage',
                 src: 'test',
-                target: '/deliver',
+                target: '/test/stage',
                 backup: {
-                    stamp: 'yyyymmddHHMMss'
-                }
+                    enabled: true,
+                    stamp: 'yyyymmddHHMMss',
+                    keep: 4
+                },
+                connection_limit: 7,
+                parallel_count: 2
             },
 
             production: {
                 name: 'Production',
                 branch: 'master',
                 src: 'dist',
-                target: '/www',
+                target: '/test/production',
                 backup: true
             }
         }
@@ -88,8 +97,11 @@ module.exports = function (grunt) {
 
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-available-tasks');
 
     //---
+
+    grunt.registerTask('default', ['availabletasks'])
 
     grunt.registerTask('watch_dev', ['watch']);
     grunt.registerTask('build', []);
