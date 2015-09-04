@@ -79,8 +79,8 @@ module.exports = function (grunt) {
         }
 
         // Cache
-        if (typeof options.cache !== 'undefined') {
-            commands.push('set cache:enable ' + lftpBool(options.cache));
+        if (typeof options.driver_cache !== 'undefined') {
+            commands.push('set cache:enable ' + lftpBool(options.driver_cache));
         }
 
         // Sync mode
@@ -233,7 +233,7 @@ module.exports = function (grunt) {
             commands.push(put);
 
             // Bye
-            commands.push('bye');
+            commands.push('bye;');
 
             // Processing
 
@@ -282,7 +282,7 @@ module.exports = function (grunt) {
             commands.push(mirror);
 
             // Bye
-            commands.push('bye');
+            commands.push('bye;');
 
             // Processing
             if (true) {
@@ -377,7 +377,7 @@ module.exports = function (grunt) {
             commands.push(mirror);
 
             // Bye
-            commands.push('bye');
+            commands.push('bye;');
 
             // Processing
             if (true) {
@@ -434,6 +434,43 @@ module.exports = function (grunt) {
                 });
 
             }
+        },
+
+        /**
+         * Clear cache method
+         */
+        clearCache: function (options, callback) {
+
+            // Open
+            var commands = [
+                getOpenCommand(options)
+            ];
+
+            commands = commands.concat(getInitCommands(options));
+
+            // Target
+            if (options.target !== false) {
+                commands.push('cd ' + options.target);
+            }
+
+            for (var i = 0; i < options.cache.length; i++) {
+                var rm = 'glob -a rm -r ' + options.cache[i];
+
+                if (grunt.option('no-write')) {
+                    rm += ' --dry-run';
+                }
+
+                commands.push(rm);
+            }
+
+            // Bye
+            commands.push('bye;');
+
+            // Processing
+            var lftp = initExecProcess(commands, function (error, stdout, stderr) {
+                callback(error !== null ? new Error(error) : null);
+            });
+
         }
 
     };

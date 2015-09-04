@@ -42,6 +42,7 @@ module.exports = function (grunt) {
             parallel_count: 2,
             auth: 'main',
             src: false,
+            cache: false,
             target: false,
             backup: false,
             messages: {
@@ -240,9 +241,9 @@ module.exports = function (grunt) {
         var secret = getSecret();
         var targetu = run.task.target.toUpperCase();
 
-        if (secret && typeof secret[task.target] !== 'undefined') {
+        if (secret && typeof secret[options.auth] !== 'undefined') {
 
-            var targetSecret = secret[run.task.target];
+            var targetSecret = secret[options.auth];
 
             run.host = grunt.option('host') || getProcessEnvVar('DELIVER_' + targetu + '_HOST') || targetSecret.host;
             run.user = grunt.option('user') || getProcessEnvVar('DELIVER_' + targetu + '_USER') || targetSecret.user;
@@ -354,6 +355,35 @@ module.exports = function (grunt) {
         }
 
         return true;
+    }    function cacheTask(run, driverOptions, callback) {
+
+        grunt.log.subhead('Cache clear started.'.blue + '(' + run.targetOptions.target.yellow + ')');
+        if (!grunt.option('no-interactive')) {
+            linger('Clearing cache...');
+        }
+
+        run.driver.clearCache(extend({}, driverOptions, {
+
+            target: run.targetOptions.target
+
+        }), function (error) {
+
+            var time = process.hrtime(run.time);
+            var timef = Math.round((time[0] + time[1] / 1000000000) * 10) / 10;
+            if (!grunt.option('no-interactive')) {
+                linger();
+            }
+            if (typeof error === 'object' && typeof error !== 'undefined' && error !== null) {
+                grunt.log.error(error.message);
+                grunt.log.error('Clear cache task failed.'.red + util.format(' (%ds)', timef).magenta);
+            } else {
+                grunt.log.ok('Clear cache task finished.'.green + util.format(' (%ds)', timef).magenta);
+            }
+
+            callback(error);
+
+        });
+
     }
 
     //---
@@ -372,7 +402,7 @@ module.exports = function (grunt) {
             ssl_verify_certificate: run.targetOptions.ssl_verify_certificate,
             passive_mode: run.targetOptions.passive_mode,
             trace: run.targetOptions.trace,
-            cache: run.targetOptions.driver_cache,
+            driver_cache: run.targetOptions.driver_cache,
             sync_mode: run.targetOptions.sync_mode,
             connection_limit: run.targetOptions.connection_limit,
             parallel_count: run.targetOptions.parallel_count,
@@ -430,7 +460,8 @@ module.exports = function (grunt) {
             ssl_verify_certificate: run.targetOptions.ssl_verify_certificate,
             passive_mode: run.targetOptions.passive_mode,
             trace: run.targetOptions.trace,
-            cache: run.targetOptions.driver_cache,
+            driver_cache: run.targetOptions.driver_cache,
+            cache: run.targetOptions.cache,
             sync_mode: run.targetOptions.sync_mode,
             connection_limit: run.targetOptions.connection_limit,
             parallel_count: run.targetOptions.parallel_count,
@@ -447,7 +478,7 @@ module.exports = function (grunt) {
         }];
 
         // Backup
-        if (!grunt.option('no-backup') && (backupEnabled(run) || grunt.option('backup'))) {
+        if (!grunt.option('no-backup') && backupEnabled(run)) {
             tasks.push(function (callback) {
                 return cleanBackupsTask(run, driverOptions, callback);
             });
@@ -457,9 +488,20 @@ module.exports = function (grunt) {
         }
 
         // Deploy
-        tasks.push(function (callback) {
-            return deployTask(run, driverOptions, callback);
-        });
+        if (!grunt.option('no-deploy')) {
+            tasks.push(function (callback) {
+                return deployTask(run, driverOptions, callback);
+            });
+        }
+
+        // Cache
+        if (!grunt.option('no-clearcache')) {
+            if (typeof driverOptions.cache !== 'undefined') {
+                tasks.push(function (callback) {
+                    return cacheTask(run, driverOptions, callback);
+                });
+            }
+        }
 
         // Tasks execution
         async.series(tasks, function (error) {
