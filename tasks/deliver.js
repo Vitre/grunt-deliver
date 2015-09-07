@@ -459,6 +459,7 @@ module.exports = function (grunt) {
             password: run.password,
             ssl_verify_certificate: run.targetOptions.ssl_verify_certificate,
             ssl_allow: run.targetOptions.ssl_allow,
+            ssl_auth: run.targetOptions.ssl_auth,
             passive_mode: run.targetOptions.passive_mode,
             trace: run.targetOptions.trace,
             driver_cache: run.targetOptions.driver_cache,
