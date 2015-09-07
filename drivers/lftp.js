@@ -68,6 +68,16 @@ module.exports = function (grunt) {
             commands.push('set ssl:verify-certificate ' + lftpBool(options.ssl_verify_certificate));
         }
 
+        // SSL allow
+        if (typeof options.ssl_allow !== 'undefined') {
+            commands.push('set ftp:ssl-allow ' + lftpBool(options.ssl_allow));
+        }
+
+        // SSL auth
+        if (typeof options.ssl_auth !== 'undefined') {
+            commands.push('set ftp:ssl-auth ' + lftpBool(options.ssl_auth));
+        }
+
         // Passive mode
         if (typeof options.passive_mode !== 'undefined') {
             commands.push('set ftp:passive-mode ' + lftpBool(options.passive_mode));

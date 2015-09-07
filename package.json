@@ -1,6 +1,6 @@
 {
   "name": "grunt-deliver",
-  "version": "0.0.1-alpha.9",
+  "version": "0.0.1-alpha.10",
   "description": "Grunt continuous delivery task",
   "main": "index.js",
   "scripts": {
