@@ -485,7 +485,7 @@ module.exports = function (grunt) {
 
         // Cache
         if (!grunt.option('no-clearcache')) {
-            if (typeof driverOptions.cache !== 'undefined') {
+            if (typeof driverOptions.cache !== 'undefined' && driverOptions.cache !== false) {
                 tasks.push(function (callback) {
                     return cacheTask(run, driverOptions, callback);
                 });
