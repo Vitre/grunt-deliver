@@ -106,14 +106,8 @@ grunt.initConfig({
             },
 
             // Connection settings
-            upload: {
-                connections: 10,
-                parallel: 2
-            },
-            download: {
-                connections: 20,
-                parallel: 5
-            },
+            connections_limit: 4,
+            parallel_count: 4,
 
             // Notification tasks
             notify: ['slack', 'hipchat'],
