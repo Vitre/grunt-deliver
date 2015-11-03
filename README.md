@@ -102,7 +102,7 @@ grunt.initConfig({
 
             // Project cache
             cache: [
-             'tmp', 'app/storage/cache', 'app/storage/views', 'app/storage/twig'
+                'tmp', 'app/storage/cache', 'app/storage/views', 'app/storage/twig'
             ],
 
             // Connection settings
