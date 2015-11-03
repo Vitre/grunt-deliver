@@ -101,9 +101,9 @@ grunt.initConfig({
             },
 
             // Project cache
-            cache: {
-                dirs: ['tmp', 'app/storage/cache', 'app/storage/views', 'app/storage/twig']
-            },
+            cache: [
+             'tmp', 'app/storage/cache', 'app/storage/views', 'app/storage/twig'
+            ],
 
             // Connection settings
             connections_limit: 4,
