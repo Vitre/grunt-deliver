@@ -54,7 +54,7 @@ Type: `Object`
  - keep: 4
 
 #### cache
-Type: `Object`
+Type: `Array`
 
 #### connection_limit
 Type: `Integer`
