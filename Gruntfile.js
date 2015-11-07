@@ -67,11 +67,12 @@ module.exports = function (grunt) {
                 auth: 'stage',
                 src: 'test',
                 target: '/test/stage',
-                backup: {
-                    enabled: true,
-                    stamp: 'yyyymmddHHMMss',
-                    keep: 4
-                },
+                backup: true,
+                //backup: {
+                //    enabled: true,
+                //    stamp: 'yyyymmddHHMMss',
+                //    keep: 4
+                //},
                 connection_limit: 20,
                 parallel_count: 10
             },

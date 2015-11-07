@@ -65,7 +65,7 @@ module.exports = function (grunt) {
         return options;
     }
 
-    function readIgnoreFile(file) {
+    function readFilterFile(file) {
         return fs.readFileSync(file).toString().replace(/\r/g, '').split('\n').filter(function (value) {
             return value !== '' && value !== ' ';
         });
@@ -82,7 +82,7 @@ module.exports = function (grunt) {
 
         if (grunt.file.exists(file)) {
 
-            pattern.deploy_ignore = readIgnoreFile(file);
+            pattern.deploy_ignore = readFilterFile(file);
 
             grunt.verbose.ok('Pattern ' + name.yellow + ' loaded.', file.grey);
 
@@ -120,10 +120,20 @@ module.exports = function (grunt) {
 
         var deployIgnoreFile = process.cwd() + '/.deliver-ignore';
         if (grunt.file.exists(deployIgnoreFile)) {
-            deployIgnore = array.union(deployIgnore, readIgnoreFile(deployIgnoreFile));
+            deployIgnore = array.union(deployIgnore, readFilterFile(deployIgnoreFile));
         }
 
         return deployIgnore;
+    }
+
+    function getBackupInclude() {
+        var backupInclude;
+        var backupIncludeFile = process.cwd() + '/.backup-include';
+        if (grunt.file.exists(backupIncludeFile)) {
+            backupInclude = readFilterFile(backupIncludeFile);
+        }
+
+        return backupInclude;
     }
 
     function getSecret() {
@@ -236,6 +246,10 @@ module.exports = function (grunt) {
         // Deploy ignore
         run.deployIgnore = getIgnore(run.pattern);
         grunt.verbose.writeln('deploy_ignore:'.yellow, JSON.stringify(run.deployIgnore, null, 2));
+
+        // Backup include
+        run.backupInclude = getBackupInclude();
+        grunt.verbose.writeln('backup inlcude:'.yellow, JSON.stringify(run.backupInclude, null, 2));
 
         // Secret
         var secret = getSecret();
