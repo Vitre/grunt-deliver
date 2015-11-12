@@ -80,6 +80,12 @@ grunt.initConfig({
 
             // Protocol driver: lftp
             driver: 'lftp',
+            
+            protocol: 'sftp', // ftp
+            
+            ssl_allow: false,
+            
+            sync_mode: false,
 
             // Project patterns: bower, composer, dev-node, git, github, ide, laravel, npm, phpunit, sass
             patterns: ['git', 'github', 'sass', 'bower', 'npm', 'dev-node', 'laravel'],
