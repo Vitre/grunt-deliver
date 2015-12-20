@@ -107,9 +107,7 @@ grunt.initConfig({
             },
 
             // Project cache
-            cache: [
-                'tmp', 'app/storage/cache', 'app/storage/views', 'app/storage/twig'
-            ],
+            cache: ['tmp', 'app/storage/cache', 'app/storage/views', 'app/storage/twig'],
 
             // Connection settings
             connections_limit: 4,
@@ -163,7 +161,7 @@ temp/
 ## Secrets
 Secret data are stored in `.deliver-secret.yml` file for local development only.  
 If you do put this filename to `.gitignore`!
-  
+
 ### .deliver-secret.yml example:
 ```yml
 stage:
@@ -178,7 +176,7 @@ production:
 ```
 
 ### Environment variables
-For building with your production runners like Jenkins, etc. use environment variables 
+For building with your production runners like Jenkins, etc. use environment variables
 and consider to keep passwords encrypted.  
 
 Task checks variables in this name format:  
@@ -190,7 +188,7 @@ DELIVER_STAGE_HOST=yourhost.com
 DELIVER_STAGE_USER=username  
 ```
 Store passwords in "password values" section.
- 
+
 ---  
 
 ## Release history

@@ -65,7 +65,7 @@ module.exports = function (grunt) {
         return options;
     }
 
-    function readIgnoreFile(file) {
+    function readFilterFile(file) {
         return fs.readFileSync(file).toString().replace(/\r/g, '').split('\n').filter(function (value) {
             return value !== '' && value !== ' ';
         });
@@ -82,7 +82,7 @@ module.exports = function (grunt) {
 
         if (grunt.file.exists(file)) {
 
-            pattern.deploy_ignore = readIgnoreFile(file);
+            pattern.deploy_ignore = readFilterFile(file);
 
             grunt.verbose.ok('Pattern ' + name.yellow + ' loaded.', file.grey);
 
@@ -120,10 +120,20 @@ module.exports = function (grunt) {
 
         var deployIgnoreFile = process.cwd() + '/.deliver-ignore';
         if (grunt.file.exists(deployIgnoreFile)) {
-            deployIgnore = array.union(deployIgnore, readIgnoreFile(deployIgnoreFile));
+            deployIgnore = array.union(deployIgnore, readFilterFile(deployIgnoreFile));
         }
 
         return deployIgnore;
+    }
+
+    function getBackupInclude() {
+        var backupInclude;
+        var backupIncludeFile = process.cwd() + '/.backup-include';
+        if (grunt.file.exists(backupIncludeFile)) {
+            backupInclude = readFilterFile(backupIncludeFile);
+        }
+
+        return backupInclude;
     }
 
     function getSecret() {
@@ -237,13 +247,17 @@ module.exports = function (grunt) {
         run.deployIgnore = getIgnore(run.pattern);
         grunt.verbose.writeln('deploy_ignore:'.yellow, JSON.stringify(run.deployIgnore, null, 2));
 
+        // Backup include
+        run.backupInclude = getBackupInclude();
+        grunt.verbose.writeln('backup inlcude:'.yellow, JSON.stringify(run.backupInclude, null, 2));
+
         // Secret
         var secret = getSecret();
         var targetu = run.task.target.toUpperCase();
 
-        if (secret && typeof secret[options.auth] !== 'undefined') {
+        if (secret && typeof secret[run.targetOptions.auth] !== 'undefined') {
 
-            var targetSecret = secret[options.auth];
+            var targetSecret = secret[run.targetOptions.auth];
 
             run.host = grunt.option('host') || getProcessEnvVar('DELIVER_' + targetu + '_HOST') || targetSecret.host;
             run.user = grunt.option('user') || getProcessEnvVar('DELIVER_' + targetu + '_USER') || targetSecret.user;
@@ -277,7 +291,8 @@ module.exports = function (grunt) {
 
     function cleanBackupsTask(run, driverOptions, callback) {
         var path = getBackupTargetDir(run.task.target, run.targetOptions);
-        grunt.verbose.writeln('Cleaning backups...'.yellow, 'keep:', run.targetOptions.backup.keep.toString().blue, path.grey);
+        grunt.log.writeln('Cleaning backups...'.yellow);
+        grunt.verbose.writeln('Keep:', run.targetOptions.backup.keep.toString().blue, path.grey);
         cleanBackups(path, run.targetOptions.backup.keep - 1);
         callback(false);
     }
@@ -286,7 +301,7 @@ module.exports = function (grunt) {
         var backupPath = getBackupPath(run.task.target, run.targetOptions);
 
         grunt.log.subhead('Backup started.'.blue + '(' + run.targetOptions.target.yellow + ' -> ' + backupPath.yellow + ')');
-        if (grunt.option('interactive') && !grunt.option('verbose') && !grunt.option('debug')) {
+        if (!grunt.option('no-interactive')) {
             linger('Downloading...');
         }
 
@@ -299,8 +314,8 @@ module.exports = function (grunt) {
 
             var time = process.hrtime(run.time);
             var timef = Math.round((time[0] + time[1] / 1000000000) * 10) / 10;
-            if (grunt.option('interactive') && !grunt.option('verbose') && !grunt.option('debug')) {
-                linger();
+            if (!grunt.option('no-interactive')) {
+                linger(false);
             }
             if (typeof error === 'object' && typeof error !== 'undefined' && error !== null) {
                 grunt.log.error(error.message);
@@ -333,7 +348,7 @@ module.exports = function (grunt) {
             var time = process.hrtime(run.time);
             var timef = Math.round((time[0] + time[1] / 1000000000) * 10) / 10;
             if (!grunt.option('no-interactive')) {
-                linger();
+                linger(false);
             }
             if (typeof error === 'object' && typeof error !== 'undefined' && error !== null) {
                 grunt.log.error(error.message);
@@ -348,7 +363,13 @@ module.exports = function (grunt) {
 
     }
 
-    function cacheTask(run, driverOptions, callback) {
+    function validateHost(run) {
+        if (!run.host) {
+            return 'Invalid host';
+        }
+
+        return true;
+    }    function cacheTask(run, driverOptions, callback) {
 
         grunt.log.subhead('Cache clear started.'.blue + '(' + run.targetOptions.target.yellow + ')');
         if (!grunt.option('no-interactive')) {
@@ -451,6 +472,8 @@ module.exports = function (grunt) {
             user: run.user,
             password: run.password,
             ssl_verify_certificate: run.targetOptions.ssl_verify_certificate,
+            ssl_allow: run.targetOptions.ssl_allow,
+            ssl_auth: run.targetOptions.ssl_auth,
             passive_mode: run.targetOptions.passive_mode,
             trace: run.targetOptions.trace,
             driver_cache: run.targetOptions.driver_cache,
@@ -460,6 +483,10 @@ module.exports = function (grunt) {
             parallel_count: run.targetOptions.parallel_count,
             ignore: run.deployIgnore
         };
+
+        if (!validateHost(run)) {
+            grunt.fail.fatal('Invalid host'.red);
+        }
 
         // Async series
         var tasks = [function (callback) {

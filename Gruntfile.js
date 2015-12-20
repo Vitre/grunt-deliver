@@ -48,8 +48,8 @@ module.exports = function (grunt) {
                 src: 'dist',
                 target: '/beta',
                 backup: false,
-                connection_limit: 10,
-                parallel_count: 4,
+                connection_limit: 7,
+                parallel_count: 2,
                 maintenance: {
                     htaccess: true
                 },
@@ -58,9 +58,7 @@ module.exports = function (grunt) {
                     success: 'Delivery to "{target}" finished.',
                     fail: 'Delivery to "{target}" failed.'
                 },
-                cache: {
-                    dirs: ['tmp', 'app/storage/cache', 'app/storage/views', 'app/storage/twig']
-                }
+                cache: ['tmp', 'app/storage/cache', 'app/storage/views', 'app/storage/twig']
             },
 
             stage: {
@@ -69,13 +67,14 @@ module.exports = function (grunt) {
                 auth: 'stage',
                 src: 'test',
                 target: '/test/stage',
-                backup: {
-                    enabled: true,
-                    stamp: 'yyyymmddHHMMss',
-                    keep: 4
-                },
-                connection_limit: 7,
-                parallel_count: 2
+                backup: true,
+                //backup: {
+                //    enabled: true,
+                //    stamp: 'yyyymmddHHMMss',
+                //    keep: 4
+                //},
+                connection_limit: 20,
+                parallel_count: 10
             },
 
             production: {
